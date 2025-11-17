@@ -32,13 +32,102 @@ class AuthViewModel(
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Initial)
     val loginState: StateFlow<LoginState> = _loginState
     
+    private val _loginFormState = MutableStateFlow(
+        LoginFormState(
+            correo = "",
+            password = "",
+            errores = LoginFormErrors()
+        )
+    )
+    val loginFormState: StateFlow<LoginFormState> = _loginFormState
+    
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Initial)
     val registerState: StateFlow<RegisterState> = _registerState
+    
+    private val _registerFormState = MutableStateFlow(
+        RegisterFormState(
+            nombre = "",
+            correo = "",
+            password = "",
+            errores = RegisterFormErrors()
+        )
+    )
+    val registerFormState: StateFlow<RegisterFormState> = _registerFormState
     
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser
     
-    fun validateEmail(email: String): ValidationState {
+    fun onLoginCorreoChange(correo: String) {
+        _loginFormState.value = _loginFormState.value.copy(
+            correo = correo,
+            errores = _loginFormState.value.errores.copy(
+                correo = validateEmail(correo).let {
+                    when (it) {
+                        is ValidationState.Valid -> null
+                        is ValidationState.Invalid -> it.message
+                    }
+                }
+            )
+        )
+    }
+    
+    fun onLoginPasswordChange(password: String) {
+        _loginFormState.value = _loginFormState.value.copy(
+            password = password,
+            errores = _loginFormState.value.errores.copy(
+                password = validatePassword(password).let {
+                    when (it) {
+                        is ValidationState.Valid -> null
+                        is ValidationState.Invalid -> it.message
+                    }
+                }
+            )
+        )
+    }
+    
+    fun onNombreChange(nombre: String) {
+        _registerFormState.value = _registerFormState.value.copy(
+            nombre = nombre,
+            errores = _registerFormState.value.errores.copy(
+                nombre = validateName(nombre).let {
+                    when (it) {
+                        is ValidationState.Valid -> null
+                        is ValidationState.Invalid -> it.message
+                    }
+                }
+            )
+        )
+    }
+    
+    fun onCorreoChange(correo: String) {
+        _registerFormState.value = _registerFormState.value.copy(
+            correo = correo,
+            errores = _registerFormState.value.errores.copy(
+                correo = validateEmail(correo).let {
+                    when (it) {
+                        is ValidationState.Valid -> null
+                        is ValidationState.Invalid -> it.message
+                    }
+                }
+            )
+        )
+    }
+    
+    fun onPasswordChange(password: String) {
+        _registerFormState.value = _registerFormState.value.copy(
+            password = password,
+            errores = _registerFormState.value.errores.copy(
+                password = validatePassword(password).let {
+                    when (it) {
+                        is ValidationState.Valid -> null
+                        is ValidationState.Invalid -> it.message
+                    }
+                }
+            )
+        )
+    }
+    
+    private fun validateEmail(email: String): ValidationState {
         val result = Validation.validateEmail(email)
         return when (result) {
             is ValidationResult.Success -> ValidationState.Valid
@@ -46,7 +135,7 @@ class AuthViewModel(
         }
     }
     
-    fun validatePassword(password: String): ValidationState {
+    private fun validatePassword(password: String): ValidationState {
         val result = Validation.validatePassword(password)
         return when (result) {
             is ValidationResult.Success -> ValidationState.Valid
@@ -54,7 +143,7 @@ class AuthViewModel(
         }
     }
     
-    fun validateName(name: String): ValidationState {
+    private fun validateName(name: String): ValidationState {
         val result = Validation.validateName(name)
         return when (result) {
             is ValidationResult.Success -> ValidationState.Valid
@@ -62,50 +151,90 @@ class AuthViewModel(
         }
     }
     
-    fun login(email: String, password: String) {
+    fun login() {
         viewModelScope.launch {
+            val estado = _loginFormState.value
+            
+            //validar todos los campos antes de iniciar sesión
+            val correoValidation = validateEmail(estado.correo)
+            val passwordValidation = validatePassword(estado.password)
+            
+            val nuevosErrores = LoginFormErrors(
+                correo = when (correoValidation) {
+                    is ValidationState.Valid -> null
+                    is ValidationState.Invalid -> correoValidation.message
+                },
+                password = when (passwordValidation) {
+                    is ValidationState.Valid -> null
+                    is ValidationState.Invalid -> passwordValidation.message
+                }
+            )
+            
+            _loginFormState.value = estado.copy(errores = nuevosErrores)
+            
+            //si hay errores, no continuar
+            if (nuevosErrores.correo != null || nuevosErrores.password != null) {
+                return@launch
+            }
+            
             _loginState.value = LoginState.Loading
             
-            when {
-                email.isBlank() -> _loginState.value = LoginState.Error("El email no puede estar vacío")
-                password.isBlank() -> _loginState.value = LoginState.Error("La contraseña no puede estar vacía")
-                else -> {
-                    val user = userDao.getUserByEmail(email)
-                    if (user != null && user.password == password) {
-                        _currentUser.value = user
-                        _loginState.value = LoginState.Success
-                    } else {
-                        _loginState.value = LoginState.Error("Email o contraseña incorrectos")
-                    }
-                }
+            val user = userDao.getUserByEmail(estado.correo)
+            if (user != null && user.password == estado.password) {
+                _currentUser.value = user
+                _loginState.value = LoginState.Success
+            } else {
+                _loginState.value = LoginState.Error("Email o contraseña incorrectos")
             }
         }
     }
     
-    fun register(nombre: String, email: String, password: String) {
+    fun register() {
         viewModelScope.launch {
+            val estado = _registerFormState.value
+            
+            //validar todos los campos antes de registrar
+            val nombreValidation = validateName(estado.nombre)
+            val correoValidation = validateEmail(estado.correo)
+            val passwordValidation = validatePassword(estado.password)
+            
+            val nuevosErrores = RegisterFormErrors(
+                nombre = when (nombreValidation) {
+                    is ValidationState.Valid -> null
+                    is ValidationState.Invalid -> nombreValidation.message
+                },
+                correo = when (correoValidation) {
+                    is ValidationState.Valid -> null
+                    is ValidationState.Invalid -> correoValidation.message
+                },
+                password = when (passwordValidation) {
+                    is ValidationState.Valid -> null
+                    is ValidationState.Invalid -> passwordValidation.message
+                }
+            )
+            
+            _registerFormState.value = estado.copy(errores = nuevosErrores)
+            
+            //si hay errores, no continuar
+            if (nuevosErrores.nombre != null || nuevosErrores.correo != null || nuevosErrores.password != null) {
+                return@launch
+            }
+            
             _registerState.value = RegisterState.Loading
             
-            when {
-                nombre.isBlank() -> _registerState.value = RegisterState.Error("El nombre no puede estar vacío")
-                email.isBlank() -> _registerState.value = RegisterState.Error("El email no puede estar vacío")
-                password.isBlank() -> _registerState.value = RegisterState.Error("La contraseña no puede estar vacía")
-                else -> {
-                    val existingUser = userDao.checkEmailExists(email)
-                    if (existingUser > 0) {
-                        _registerState.value = RegisterState.Error("Este email ya está registrado")
-                    } else {
-                        val newUser = User(
-                            nombre = nombre,
-                            email = email,
-                            password = password
-                        )
-                        val userId = userDao.insertUser(newUser)
-                        val createdUser = userDao.getUserById(userId)!!
-                        _currentUser.value = createdUser
-                        _registerState.value = RegisterState.Success
-                    }
-                }
+            val existingUser = userDao.checkEmailExists(estado.correo)
+            if (existingUser > 0) {
+                _registerState.value = RegisterState.Error("Este email ya está registrado")
+            } else {
+                val newUser = User(
+                    nombre = estado.nombre,
+                    email = estado.correo,
+                    password = estado.password
+                )
+                val userId = userDao.insertUser(newUser)
+                val createdUser = userDao.getUserById(userId)!!
+                _currentUser.value = createdUser
+                _registerState.value = RegisterState.Success
             }
         }
     }
@@ -113,8 +242,43 @@ class AuthViewModel(
     fun logout() {
         _currentUser.value = null
         _loginState.value = LoginState.Initial
+        _loginFormState.value = LoginFormState(
+            correo = "",
+            password = "",
+            errores = LoginFormErrors()
+        )
         _registerState.value = RegisterState.Initial
+        _registerFormState.value = RegisterFormState(
+            nombre = "",
+            correo = "",
+            password = "",
+            errores = RegisterFormErrors()
+        )
     }
+    
+    data class LoginFormState(
+        val correo: String,
+        val password: String,
+        val errores: LoginFormErrors
+    )
+    
+    data class LoginFormErrors(
+        val correo: String? = null,
+        val password: String? = null
+    )
+    
+    data class RegisterFormState(
+        val nombre: String,
+        val correo: String,
+        val password: String,
+        val errores: RegisterFormErrors
+    )
+    
+    data class RegisterFormErrors(
+        val nombre: String? = null,
+        val correo: String? = null,
+        val password: String? = null
+    )
     
     sealed class LoginState {
         object Initial : LoginState()

@@ -25,14 +25,7 @@ fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
-    var nombre by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    
-    var nombreError by remember { mutableStateOf<String?>(null) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
-    
+    val estado = viewModel.registerFormState.collectAsState()
     val registerState = viewModel.registerState.collectAsState()
     
     LaunchedEffect(registerState.value) {
@@ -64,121 +57,64 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(32.dp))
         
         OutlinedTextField(
-            value = nombre,
-            onValueChange = { newValue ->
-                nombre = newValue
-                val validation = viewModel.validateName(nombre)
-                nombreError = when (validation) {
-                    is AuthViewModel.ValidationState.Valid -> null
-                    is AuthViewModel.ValidationState.Invalid -> null
-                }
-            },
+            value = estado.value.nombre,
+            onValueChange = viewModel::onNombreChange,
             label = { Text("Nombre") },
             leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
-            isError = nombreError != null,
+            isError = estado.value.errores.nombre != null,
+            supportingText = {
+                estado.value.errores.nombre?.let {
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize()
         )
         
-        if (nombreError != null) {
-            Text(
-                text = nombreError!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(
-            value = email,
-            onValueChange = { newValue ->
-                email = newValue
-                val validation = viewModel.validateEmail(email)
-                emailError = when (validation) {
-                    is AuthViewModel.ValidationState.Valid -> null
-                    is AuthViewModel.ValidationState.Invalid -> null
+            value = estado.value.correo,
+            onValueChange = viewModel::onCorreoChange,
+            label = { Text("Correo electrónico") },
+            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
+            isError = estado.value.errores.correo != null,
+            supportingText = {
+                estado.value.errores.correo?.let {
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
                 }
             },
-            label = { Text("Email") },
-            leadingIcon = { Icon(Icons.Filled.Email, contentDescription = null) },
-            isError = emailError != null,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize()
         )
         
-        if (emailError != null) {
-            Text(
-                text = emailError!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(
-            value = password,
-            onValueChange = { newValue ->
-                password = newValue
-                val validation = viewModel.validatePassword(password)
-                passwordError = when (validation) {
-                    is AuthViewModel.ValidationState.Valid -> null
-                    is AuthViewModel.ValidationState.Invalid -> null
-                }
-            },
+            value = estado.value.password,
+            onValueChange = viewModel::onPasswordChange,
             label = { Text("Contraseña") },
             leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
             visualTransformation = PasswordVisualTransformation(),
-            isError = passwordError != null,
+            isError = estado.value.errores.password != null,
+            supportingText = {
+                estado.value.errores.password?.let {
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
+                }
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier
                 .fillMaxWidth()
                 .animateContentSize()
         )
         
-        if (passwordError != null) {
-            Text(
-                text = passwordError!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        
         Spacer(modifier = Modifier.height(24.dp))
         
         Button(
-            onClick = {
-                nombreError = null
-                emailError = null
-                passwordError = null
-                
-                val nombreValidation = viewModel.validateName(nombre)
-                if (nombreValidation is AuthViewModel.ValidationState.Invalid) {
-                    nombreError = nombreValidation.message
-                    return@Button
-                }
-                
-                val emailValidation = viewModel.validateEmail(email)
-                if (emailValidation is AuthViewModel.ValidationState.Invalid) {
-                    emailError = emailValidation.message
-                    return@Button
-                }
-                
-                val passwordValidation = viewModel.validatePassword(password)
-                if (passwordValidation is AuthViewModel.ValidationState.Invalid) {
-                    passwordError = passwordValidation.message
-                    return@Button
-                }
-                
-                viewModel.register(nombre, email, password)
-            },
+            onClick = { viewModel.register() },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

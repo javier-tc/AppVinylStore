@@ -1,9 +1,11 @@
 package com.example.vinylstore.ui.screens
 
 import android.app.Activity
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -18,13 +20,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -38,6 +45,8 @@ fun ProfileScreen(
     onNavigateToAdminProducts: () -> Unit
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var imageFile by remember { mutableStateOf<File?>(null) }
+    var isProcessingImage by remember { mutableStateOf(false) }
     val context = LocalContext.current
     
     val permissionsState = rememberMultiplePermissionsState(
@@ -47,23 +56,63 @@ fun ProfileScreen(
         )
     )
     
+    //animación de pulso para el indicador de carga
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+    
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        if (bitmap != null) {
-            //aquí normalmente guardaríamos la imagen en storage y obteríamos el Uri
-            //para simplificar, solo mostramos la imagen
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && imageFile != null) {
+            selectedImageUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                imageFile!!
+            )
+            isProcessingImage = false
+        } else {
+            isProcessingImage = false
         }
     }
     
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        selectedImageUri = uri
+        uri?.let {
+            selectedImageUri = it
+        }
     }
     
-    LaunchedEffect(Unit) {
-        permissionsState.launchMultiplePermissionRequest()
+    fun createImageFile(context: Context): File {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "JPEG_${timeStamp}_"
+        val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(imageFileName, ".jpg", storageDir).apply {
+            imageFile = this
+        }
+    }
+    
+    fun launchCamera() {
+        if (permissionsState.allPermissionsGranted) {
+            isProcessingImage = true
+            val file = createImageFile(context)
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            cameraLauncher.launch(uri)
+        } else {
+            permissionsState.launchMultiplePermissionRequest()
+        }
     }
     
     Scaffold(
@@ -91,7 +140,16 @@ fun ProfileScreen(
                 shape = CircleShape,
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                if (selectedImageUri != null) {
+                if (isProcessingImage) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.scale(scale)
+                        )
+                    }
+                } else if (selectedImageUri != null) {
                     AsyncImage(
                         model = selectedImageUri,
                         contentDescription = "Imagen de perfil",
@@ -117,18 +175,20 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
-                    onClick = {
-                        if (permissionsState.allPermissionsGranted) {
-                            //cameraLauncher.launch() - requeriría implementar save logic
-                        } else {
-                            permissionsState.launchMultiplePermissionRequest()
-                        }
-                    },
-                    modifier = Modifier.weight(1f)
+                    onClick = { launchCamera() },
+                    modifier = Modifier.weight(1f),
+                    enabled = !isProcessingImage
                 ) {
-                    Icon(Icons.Filled.Camera, contentDescription = null)
+                    if (isProcessingImage) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Filled.Camera, contentDescription = null)
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Cámara")
+                    Text(if (isProcessingImage) "Procesando..." else "Cámara")
                 }
                 
                 OutlinedButton(

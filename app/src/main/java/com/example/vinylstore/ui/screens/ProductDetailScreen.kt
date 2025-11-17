@@ -1,6 +1,7 @@
 package com.example.vinylstore.ui.screens
 
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,12 +11,16 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vinylstore.model.Product
 import com.example.vinylstore.viewmodel.CartViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +32,18 @@ fun ProductDetailScreen(
     onAddToCart: () -> Unit
 ) {
     var quantity by remember { mutableStateOf(1) }
+    var isAddingToCart by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    
+    //animación del FAB cuando se agrega al carrito
+    val fabScale by animateFloatAsState(
+        targetValue = if (isAddingToCart) 1.2f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "fabScale"
+    )
     
     Scaffold(
         topBar = {
@@ -42,12 +59,26 @@ fun ProductDetailScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    isAddingToCart = true
                     cartViewModel.addToCart(product.id, currentUserId, quantity)
-                    onAddToCart()
+                    scope.launch {
+                        delay(800)
+                        isAddingToCart = false
+                        onAddToCart()
+                    }
                 },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.scale(fabScale)
             ) {
-                Icon(Icons.Filled.ShoppingCart, contentDescription = "Agregar al carrito")
+                if (isAddingToCart) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Filled.ShoppingCart, contentDescription = "Agregar al carrito")
+                }
             }
         }
     ) { padding ->

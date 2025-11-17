@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.vinylstore.viewmodel.CartItemWithProduct
 import com.example.vinylstore.viewmodel.CartViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,10 +41,15 @@ fun CartScreen(
         }
     }
     
+    var isConfirmingOrder by remember { mutableStateOf(false) }
+    
     val handleConfirmOrder: () -> Unit = {
         scope.launch {
+            isConfirmingOrder = true
             cartViewModel.confirmOrder(cartItems.map { it.cartItem }, currentUserId)
             cartViewModel.clearCart(currentUserId)
+            delay(500)
+            isConfirmingOrder = false
             onConfirmOrder() //llama al callback para navegar
         }
     }
@@ -83,9 +89,17 @@ fun CartScreen(
                     Button(
                         onClick = handleConfirmOrder,
                         modifier = Modifier.height(56.dp),
-                        enabled = cartItems.isNotEmpty()
+                        enabled = cartItems.isNotEmpty() && !isConfirmingOrder
                     ) {
-                        Text("Comprar")
+                        if (isConfirmingOrder) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Comprar")
+                        }
                     }
                 }
             }

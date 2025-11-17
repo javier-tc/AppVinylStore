@@ -30,6 +30,10 @@ class CartViewModel(
         }
     }
     
+    fun getCartItemCount(userId: Long): Flow<Int> {
+        return cartDao.getCartItemCount(userId)
+    }
+    
     fun addToCart(productId: Int, userId: Long, quantity: Int = 1) {
         viewModelScope.launch {
             //verificar si ya existe un item con ese producto

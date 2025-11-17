@@ -5,7 +5,7 @@ Vinylstore
 
 ## 2. Integrantes
 - Javier Tapia
-- Sergio del Campo
+- Sergio Del Campo
 
 ## 3. Funcionalidades
 - **Autenticación de usuarios**: Login y registro de usuarios con validación de campos

@@ -196,13 +196,9 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
         
         composable("product_form") {
             ProductFormScreen(
+                viewModel = productViewModel,
                 product = editingProduct,
-                onSave = { product ->
-                    if (editingProduct == null) {
-                        productViewModel.addProduct(product)
-                    } else {
-                        productViewModel.updateProduct(product)
-                    }
+                onSave = {
                     editingProduct = null
                     navController.popBackStack()
                 },

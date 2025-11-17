@@ -13,25 +13,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.vinylstore.model.Product
-import com.example.vinylstore.util.ValidationResult
+import com.example.vinylstore.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductFormScreen(
+    viewModel: ProductViewModel,
     product: Product? = null,
-    onSave: (Product) -> Unit,
+    onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
-    var titulo by remember { mutableStateOf(product?.titulo ?: "") }
-    var artista by remember { mutableStateOf(product?.artista ?: "") }
-    var precio by remember { mutableStateOf(product?.precio?.toString() ?: "") }
-    var descripcion by remember { mutableStateOf(product?.descripcion ?: "") }
-    var genero by remember { mutableStateOf(product?.genero ?: "") }
-    var stock by remember { mutableStateOf(product?.stock?.toString() ?: "") }
+    val estado = viewModel.productFormState.collectAsState()
+    val saveState = viewModel.saveProductState.collectAsState()
     
-    var errores by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    LaunchedEffect(product) {
+        viewModel.initializeForm(product)
+    }
+    
+    LaunchedEffect(saveState.value) {
+        when (saveState.value) {
+            is ProductViewModel.SaveProductState.Success -> {
+                onSave()
+            }
+            else -> {}
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -43,37 +52,15 @@ fun ProductFormScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = {
-                        errores = emptyMap()
-                        
-                        if (titulo.isBlank()) {
-                            errores = errores + ("titulo" to "El título no puede estar vacío")
-                            return@TextButton
+                    TextButton(
+                        onClick = { viewModel.saveProduct(product?.id) },
+                        enabled = saveState.value !is ProductViewModel.SaveProductState.Loading
+                    ) {
+                        if (saveState.value is ProductViewModel.SaveProductState.Loading) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                        } else {
+                            Text("Guardar")
                         }
-                        if (artista.isBlank()) {
-                            errores = errores + ("artista" to "El artista no puede estar vacío")
-                            return@TextButton
-                        }
-                        val precioValor = precio.toDoubleOrNull()
-                        if (precioValor == null || precioValor <= 0) {
-                            errores = errores + ("precio" to "El precio debe ser mayor a 0")
-                            return@TextButton
-                        }
-                        val stockValor = stock.toIntOrNull() ?: 0
-                        
-                        val newProduct = Product(
-                            id = product?.id ?: (System.currentTimeMillis().toInt() % 100000),
-                            titulo = titulo,
-                            artista = artista,
-                            precio = precioValor,
-                            descripcion = descripcion,
-                            genero = genero,
-                            imagenUrl = "https://placeholder.com",
-                            stock = stockValor
-                        )
-                        onSave(newProduct)
-                    }) {
-                        Text("Guardar")
                     }
                 }
             )
@@ -88,72 +75,106 @@ fun ProductFormScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
-                value = titulo,
-                onValueChange = { titulo = it; errores = errores - "titulo" },
+                value = estado.value.titulo,
+                onValueChange = viewModel::onTituloChange,
                 label = { Text("Título") },
-                isError = errores.containsKey("titulo"),
-                modifier = Modifier.fillMaxWidth().animateContentSize()
+                isError = estado.value.errores.titulo != null,
+                supportingText = {
+                    estado.value.errores.titulo?.let {
+                        Text(text = it, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
             )
-            if (errores.containsKey("titulo")) {
-                Text(
-                    text = errores["titulo"]!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
             
             OutlinedTextField(
-                value = artista,
-                onValueChange = { artista = it; errores = errores - "artista" },
+                value = estado.value.artista,
+                onValueChange = viewModel::onArtistaChange,
                 label = { Text("Artista") },
-                isError = errores.containsKey("artista"),
-                modifier = Modifier.fillMaxWidth().animateContentSize()
+                isError = estado.value.errores.artista != null,
+                supportingText = {
+                    estado.value.errores.artista?.let {
+                        Text(text = it, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
             )
-            if (errores.containsKey("artista")) {
-                Text(
-                    text = errores["artista"]!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
             
             OutlinedTextField(
-                value = precio,
-                onValueChange = { precio = it; errores = errores - "precio" },
+                value = estado.value.precio,
+                onValueChange = viewModel::onPrecioChange,
                 label = { Text("Precio") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = errores.containsKey("precio"),
-                modifier = Modifier.fillMaxWidth().animateContentSize()
+                isError = estado.value.errores.precio != null,
+                supportingText = {
+                    estado.value.errores.precio?.let {
+                        Text(text = it, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
             )
-            if (errores.containsKey("precio")) {
-                Text(
-                    text = errores["precio"]!!,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
             
             OutlinedTextField(
-                value = descripcion,
-                onValueChange = { descripcion = it },
+                value = estado.value.descripcion,
+                onValueChange = viewModel::onDescripcionChange,
                 label = { Text("Descripción") },
                 modifier = Modifier.fillMaxWidth()
             )
             
             OutlinedTextField(
-                value = genero,
-                onValueChange = { genero = it },
+                value = estado.value.genero,
+                onValueChange = viewModel::onGeneroChange,
                 label = { Text("Género") },
                 modifier = Modifier.fillMaxWidth()
             )
             
             OutlinedTextField(
-                value = stock,
-                onValueChange = { stock = it },
+                value = estado.value.imagenUrl,
+                onValueChange = viewModel::onImagenUrlChange,
+                label = { Text("URL de Imagen") },
+                placeholder = { Text("https://ejemplo.com/imagen.jpg") },
+                isError = estado.value.errores.imagenUrl != null,
+                supportingText = {
+                    estado.value.errores.imagenUrl?.let {
+                        Text(text = it, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+            )
+            
+            OutlinedTextField(
+                value = estado.value.stock,
+                onValueChange = viewModel::onStockChange,
                 label = { Text("Stock") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                isError = estado.value.errores.stock != null,
+                supportingText = {
+                    estado.value.errores.stock?.let {
+                        Text(text = it, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
             )
+            
+            if (saveState.value is ProductViewModel.SaveProductState.Error) {
+                Text(
+                    text = (saveState.value as ProductViewModel.SaveProductState.Error).message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

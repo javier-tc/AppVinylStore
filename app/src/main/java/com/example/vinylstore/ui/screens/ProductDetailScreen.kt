@@ -2,6 +2,7 @@ package com.example.vinylstore.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,8 +16,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.model.Product
 import com.example.vinylstore.viewmodel.CartViewModel
 import kotlinx.coroutines.delay
@@ -97,15 +100,48 @@ fun ProductDetailScreen(
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Imagen de Vinilo",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                if (product.imagenUrl.isNotEmpty()) {
+                    val painter = rememberAsyncImagePainter(
+                        model = product.imagenUrl,
+                        onError = { error ->
+                            android.util.Log.e("ImageLoad", "Error cargando: ${product.imagenUrl}", error.result.throwable)
+                        },
+                        onSuccess = { success ->
+                            android.util.Log.d("ImageLoad", "Imagen cargada: ${product.imagenUrl}")
+                        }
                     )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            painter = painter,
+                            contentDescription = product.titulo,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                        if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                            Text(
+                                text = "Imagen de Vinilo",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Imagen de Vinilo",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
                 }
             }
             

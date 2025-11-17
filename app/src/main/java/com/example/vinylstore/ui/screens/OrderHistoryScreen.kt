@@ -2,6 +2,7 @@ package com.example.vinylstore.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,8 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.viewmodel.OrderViewModel
 import com.example.vinylstore.viewmodel.OrderWithProduct
 import java.text.SimpleDateFormat
@@ -97,11 +100,51 @@ fun OrderCard(orderWithProduct: OrderWithProduct) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = orderWithProduct.product?.titulo ?: "Producto no disponible",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    if (orderWithProduct.product != null && orderWithProduct.product.imagenUrl.isNotEmpty()) {
+                        val painter = rememberAsyncImagePainter(
+                            model = orderWithProduct.product.imagenUrl
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(50.dp)
+                                .height(50.dp)
+                        ) {
+                            Image(
+                                painter = painter,
+                                contentDescription = orderWithProduct.product.titulo,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                            if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .align(Alignment.Center),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                                Text(
+                                    text = "V",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        }
+                    }
+                    Text(
+                        text = orderWithProduct.product?.titulo ?: "Producto no disponible",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
                 StatusChip(orderWithProduct.order.estado)
             }
             

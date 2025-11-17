@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.model.Product
 import com.example.vinylstore.viewmodel.CartViewModel
 import com.example.vinylstore.viewmodel.ProductViewModel
@@ -43,6 +45,20 @@ fun ProductsScreen(
     val cartItemCount by cartViewModel.getCartItemCount(currentUserId).collectAsState(initial = 0)
     var addedProductId by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
+    
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    
+    val categories = remember(products) {
+        products.map { it.genero }.distinct().sorted()
+    }
+    
+    val filteredProducts = remember(products, selectedCategory) {
+        if (selectedCategory == null) {
+            products
+        } else {
+            products.filter { it.genero == selectedCategory }
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -69,31 +85,108 @@ fun ProductsScreen(
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(products) { product ->
-                    ProductCard(
-                        product = product,
-                        isAnimating = addedProductId == product.id,
-                        onAddToCart = {
-                            addedProductId = product.id
-                            cartViewModel.addToCart(product.id, currentUserId)
-                            scope.launch {
-                                delay(1000)
-                                addedProductId = null
-                            }
-                        },
-                        onClick = {
-                            onNavigateToDetail(product)
-                        }
-                    )
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            item {
+                Text(
+                    text = "Productos Destacados",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(products.take(5)) { product ->
+                        ProductCarouselCard(
+                            product = product,
+                            onClick = { onNavigateToDetail(product) }
+                        )
+                    }
                 }
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            item {
+                Text(
+                    text = "Filtrar por Categoría",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    item {
+                        FilterChip(
+                            selected = selectedCategory == null,
+                            onClick = { selectedCategory = null },
+                            label = { Text("Todos") }
+                        )
+                    }
+                    items(categories) { category ->
+                        FilterChip(
+                            selected = selectedCategory == category,
+                            onClick = { selectedCategory = category },
+                            label = { Text(category) }
+                        )
+                    }
+                }
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            item {
+                Text(
+                    text = if (selectedCategory == null) "Todos los Productos" else "Productos: $selectedCategory",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            
+            items(filteredProducts) { product ->
+                ProductCard(
+                    product = product,
+                    isAnimating = addedProductId == product.id,
+                    onAddToCart = {
+                        addedProductId = product.id
+                        cartViewModel.addToCart(product.id, currentUserId)
+                        scope.launch {
+                            delay(1000)
+                            addedProductId = null
+                        }
+                    },
+                    onClick = {
+                        onNavigateToDetail(product)
+                    }
+                )
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
@@ -161,11 +254,49 @@ fun ProductCard(
                     .background(Color.Gray.copy(alpha = 0.2f), RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Vinilo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                if (product.imagenUrl.isNotEmpty()) {
+                    val painter = rememberAsyncImagePainter(
+                        model = product.imagenUrl,
+                        onError = { error ->
+                            android.util.Log.e("ImageLoad", "Error cargando: ${product.imagenUrl}", error.result.throwable)
+                        },
+                        onSuccess = { success ->
+                            android.util.Log.d("ImageLoad", "Imagen cargada: ${product.imagenUrl}")
+                        }
+                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Image(
+                            painter = painter,
+                            contentDescription = product.titulo,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .align(Alignment.Center),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                        if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                            Text(
+                                text = "Vinilo",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "Vinilo",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.width(16.dp))
@@ -215,6 +346,91 @@ fun ProductCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun ProductCarouselCard(
+    product: Product,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(200.dp)
+            .height(280.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        onClick = onClick
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(Color.Gray.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (product.imagenUrl.isNotEmpty()) {
+                    val painter = rememberAsyncImagePainter(model = product.imagenUrl)
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            painter = painter,
+                            contentDescription = product.titulo,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                        if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                        if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                            Text(
+                                text = "Vinilo",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "Vinilo",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+            }
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = product.titulo,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = product.artista,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$${product.precio.toInt()}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

@@ -27,6 +27,59 @@ object Validation {
             else -> ValidationResult.Success
         }
     }
+    
+    fun validateProductTitle(titulo: String): ValidationResult {
+        return when {
+            titulo.isBlank() -> ValidationResult.Error("El título no puede estar vacío")
+            titulo.length < 2 -> ValidationResult.Error("El título debe tener al menos 2 caracteres")
+            else -> ValidationResult.Success
+        }
+    }
+    
+    fun validateProductArtist(artista: String): ValidationResult {
+        return when {
+            artista.isBlank() -> ValidationResult.Error("El artista no puede estar vacío")
+            artista.length < 2 -> ValidationResult.Error("El artista debe tener al menos 2 caracteres")
+            else -> ValidationResult.Success
+        }
+    }
+    
+    fun validateProductPrice(precio: String): ValidationResult {
+        return when {
+            precio.isBlank() -> ValidationResult.Error("El precio no puede estar vacío")
+            else -> {
+                val precioValor = precio.toDoubleOrNull()
+                when {
+                    precioValor == null -> ValidationResult.Error("El precio debe ser un número válido")
+                    precioValor <= 0 -> ValidationResult.Error("El precio debe ser mayor a 0")
+                    else -> ValidationResult.Success
+                }
+            }
+        }
+    }
+    
+    fun validateProductStock(stock: String): ValidationResult {
+        return when {
+            stock.isBlank() -> ValidationResult.Success
+            else -> {
+                val stockValor = stock.toIntOrNull()
+                when {
+                    stockValor == null -> ValidationResult.Error("El stock debe ser un número válido")
+                    stockValor < 0 -> ValidationResult.Error("El stock no puede ser negativo")
+                    else -> ValidationResult.Success
+                }
+            }
+        }
+    }
+    
+    fun validateImageUrl(url: String): ValidationResult {
+        return when {
+            url.isBlank() -> ValidationResult.Success
+            !android.util.Patterns.WEB_URL.matcher(url).matches() -> 
+                ValidationResult.Error("Ingresa una URL válida")
+            else -> ValidationResult.Success
+        }
+    }
 }
 
 sealed class ValidationResult {

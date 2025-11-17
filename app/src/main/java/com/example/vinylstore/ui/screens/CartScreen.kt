@@ -2,6 +2,7 @@ package com.example.vinylstore.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,8 +17,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.viewmodel.CartItemWithProduct
 import com.example.vinylstore.viewmodel.CartViewModel
 import kotlinx.coroutines.delay
@@ -180,11 +183,41 @@ fun CartItemCard(
                         .height(60.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Vinilo",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                    if (cartItemWithProduct.product.imagenUrl.isNotEmpty()) {
+                        val painter = rememberAsyncImagePainter(
+                            model = cartItemWithProduct.product.imagenUrl
+                        )
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            Image(
+                                painter = painter,
+                                contentDescription = cartItemWithProduct.product.titulo,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                            if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .align(Alignment.Center),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                                Text(
+                                    text = "Vinilo",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "Vinilo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.width(12.dp))

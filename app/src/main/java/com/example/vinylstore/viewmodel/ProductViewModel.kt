@@ -2,8 +2,8 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.data.ProductDao
 import com.example.vinylstore.model.Product
+import com.example.vinylstore.repository.ProductRepository
 import com.example.vinylstore.util.Validation
 import com.example.vinylstore.util.ValidationResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ProductViewModel(
-    private val productDao: ProductDao
+    private val productRepository: ProductRepository
 ) : ViewModel() {
     
-    val products = productDao.getAllProducts()
+    val products = productRepository.products
     
     private val _selectedProduct = MutableStateFlow<Product?>(null)
     val selectedProduct: StateFlow<Product?> = _selectedProduct.asStateFlow()
@@ -200,7 +200,7 @@ class ProductViewModel(
             val imagenUrlFinal = estado.imagenUrl.ifBlank { "https://via.placeholder.com/300" }
             
             val newProduct = Product(
-                id = productId ?: (System.currentTimeMillis().toInt() % 100000),
+                id = productId ?: 0,
                 titulo = estado.titulo,
                 artista = estado.artista,
                 precio = precioValor,
@@ -210,13 +210,17 @@ class ProductViewModel(
                 stock = stockValor
             )
             
-            if (productId == null) {
-                addProduct(newProduct)
+            val result = if (productId == null) {
+                productRepository.createProduct(newProduct)
             } else {
-                updateProduct(newProduct)
+                productRepository.updateProduct(newProduct)
             }
             
-            _saveProductState.value = SaveProductState.Success
+            result.onSuccess {
+                _saveProductState.value = SaveProductState.Success
+            }.onFailure { exception ->
+                _saveProductState.value = SaveProductState.Error(exception.message ?: "Error al guardar producto")
+            }
         }
     }
     
@@ -247,26 +251,13 @@ class ProductViewModel(
     }
     
     init {
-        initializeProducts()
+        loadProducts()
     }
     
-    private fun initializeProducts() {
+    private fun loadProducts() {
         viewModelScope.launch {
-            val count = productDao.productExists(1)
-            if (count == 0) {
-                val initialProducts = listOf(
-                    Product(1, "Abbey Road", "The Beatles", 45000.0, 
-                        "Álbum icónico de 1969", "Rock", "https://th.bing.com/th/id/R.9b5bfaa303595bec7d186032fdf46282?rik=P%2bmzEURyBGZvDQ&pid=ImgRaw&r=0", 10),
-                    Product(2, "The Dark Side of the Moon", "Pink Floyd", 52000.0,
-                        "Grabación revolucionaria de rock progresivo", "Progressive Rock", "https://tse4.mm.bing.net/th/id/OIP.pNbqWq1EjFsAtHnJwKoYcwHaHa?rs=1&pid=ImgDetMain&o=7&rm=3", 8),
-                    Product(3, "Kind of Blue", "Miles Davis", 48000.0,
-                        "Obra maestra del jazz modal", "Jazz", "https://tse3.mm.bing.net/th/id/OIP.bq5eSwrarMlhhH3fRZmQHwHaGs?rs=1&pid=ImgDetMain&o=7&rm=3", 5),
-                    Product(4, "Led Zeppelin IV", "Led Zeppelin", 47000.0,
-                        "Álbum emblemático del rock", "Rock", "https://http2.mlstatic.com/D_NQ_NP_908718-MLB51428359896_092022-O.webp", 12),
-                    Product(5, "Miles Davis Quintet", "Miles Davis", 55000.0,
-                        "Jazz legendario", "Jazz", "https://th.bing.com/th/id/R.e062b28d9a1590221ecc67ba727aad28?rik=e316YypZCfcCqg&riu=http%3a%2f%2fwww.progarchives.com%2fprogressive_rock_discography_covers%2f3906%2fcover_51772062016_r.jpg&ehk=M594PasbB9Xo2OtLA%2f%2fh9SgN7ffAehxTtAQWF%2bjbZj4%3d&risl=&pid=ImgRaw&r=0", 7)
-                )
-                productDao.insertProducts(initialProducts)
+            productRepository.getAllProducts().onFailure { exception ->
+                //manejar error si es necesario
             }
         }
     }
@@ -281,25 +272,25 @@ class ProductViewModel(
     
     fun addProduct(product: Product) {
         viewModelScope.launch {
-            productDao.insertProduct(product)
+            productRepository.createProduct(product)
         }
     }
     
     fun updateProduct(product: Product) {
         viewModelScope.launch {
-            productDao.updateProduct(product)
+            productRepository.updateProduct(product)
         }
     }
     
     fun deleteProduct(product: Product) {
         viewModelScope.launch {
-            productDao.deleteProduct(product)
+            productRepository.deleteProduct(product.id)
         }
     }
     
     fun updateStock(productId: Int, stock: Int) {
         viewModelScope.launch {
-            productDao.updateStock(productId, stock)
+            productRepository.updateStock(productId, stock)
         }
     }
 }

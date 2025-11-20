@@ -38,6 +38,10 @@ fun CartScreen(
     val scope = rememberCoroutineScope()
     var totalPrice by remember { mutableStateOf(0.0) }
     
+    LaunchedEffect(currentUserId) {
+        cartViewModel.loadCart(currentUserId)
+    }
+    
     LaunchedEffect(cartItems) {
         scope.launch {
             totalPrice = cartViewModel.getTotalPrice(currentUserId)

@@ -2,8 +2,8 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.data.UserDao
 import com.example.vinylstore.model.User
+import com.example.vinylstore.repository.AuthRepository
 import com.example.vinylstore.util.Validation
 import com.example.vinylstore.util.ValidationResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,23 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val userDao: UserDao
+    private val authRepository: AuthRepository
 ) : ViewModel() {
-    
-    init {
-        viewModelScope.launch {
-            val existingAdmin = userDao.getUserByEmail("admin@vinylstore.com")
-            if (existingAdmin == null) {
-                val adminUser = User(
-                    nombre = "Administrador",
-                    email = "admin@vinylstore.com",
-                    password = "admin123",
-                    rol = "administrador"
-                )
-                userDao.insertUser(adminUser)
-            }
-        }
-    }
     
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Initial)
     val loginState: StateFlow<LoginState> = _loginState
@@ -54,8 +39,7 @@ class AuthViewModel(
     )
     val registerFormState: StateFlow<RegisterFormState> = _registerFormState
     
-    private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser: StateFlow<User?> = _currentUser
+    val currentUser: StateFlow<User?> = authRepository.currentUser
     
     fun onLoginCorreoChange(correo: String) {
         _loginFormState.value = _loginFormState.value.copy(
@@ -179,13 +163,13 @@ class AuthViewModel(
             
             _loginState.value = LoginState.Loading
             
-            val user = userDao.getUserByEmail(estado.correo)
-            if (user != null && user.password == estado.password) {
-                _currentUser.value = user
-                _loginState.value = LoginState.Success
-            } else {
-                _loginState.value = LoginState.Error("Email o contraseña incorrectos")
-            }
+            authRepository.login(estado.correo, estado.password)
+                .onSuccess {
+                    _loginState.value = LoginState.Success
+                }
+                .onFailure { exception ->
+                    _loginState.value = LoginState.Error(exception.message ?: "Error al iniciar sesión")
+                }
         }
     }
     
@@ -222,38 +206,38 @@ class AuthViewModel(
             
             _registerState.value = RegisterState.Loading
             
-            val existingUser = userDao.checkEmailExists(estado.correo)
-            if (existingUser > 0) {
-                _registerState.value = RegisterState.Error("Este email ya está registrado")
-            } else {
-                val newUser = User(
-                    nombre = estado.nombre,
-                    email = estado.correo,
-                    password = estado.password
-                )
-                val userId = userDao.insertUser(newUser)
-                val createdUser = userDao.getUserById(userId)!!
-                _currentUser.value = createdUser
-                _registerState.value = RegisterState.Success
-            }
+            //separar nombre en firstName y lastName
+            val nameParts = estado.nombre.trim().split(" ", limit = 2)
+            val firstName = nameParts[0]
+            val lastName = if (nameParts.size > 1) nameParts[1] else ""
+            
+            authRepository.register(estado.correo, estado.password, firstName, lastName)
+                .onSuccess {
+                    _registerState.value = RegisterState.Success
+                }
+                .onFailure { exception ->
+                    _registerState.value = RegisterState.Error(exception.message ?: "Error al registrar usuario")
+                }
         }
     }
     
     fun logout() {
-        _currentUser.value = null
-        _loginState.value = LoginState.Initial
-        _loginFormState.value = LoginFormState(
-            correo = "",
-            password = "",
-            errores = LoginFormErrors()
-        )
-        _registerState.value = RegisterState.Initial
-        _registerFormState.value = RegisterFormState(
-            nombre = "",
-            correo = "",
-            password = "",
-            errores = RegisterFormErrors()
-        )
+        viewModelScope.launch {
+            authRepository.logout()
+            _loginState.value = LoginState.Initial
+            _loginFormState.value = LoginFormState(
+                correo = "",
+                password = "",
+                errores = LoginFormErrors()
+            )
+            _registerState.value = RegisterState.Initial
+            _registerFormState.value = RegisterFormState(
+                nombre = "",
+                correo = "",
+                password = "",
+                errores = RegisterFormErrors()
+            )
+        }
     }
     
     data class LoginFormState(

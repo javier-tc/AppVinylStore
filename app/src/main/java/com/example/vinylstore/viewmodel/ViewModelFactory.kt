@@ -2,25 +2,23 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.example.vinylstore.data.CartDao
-import com.example.vinylstore.data.OrderDao
-import com.example.vinylstore.data.ProductDao
-import com.example.vinylstore.data.UserDao
+import com.example.vinylstore.repository.AuthRepository
+import com.example.vinylstore.repository.CartRepository
+import com.example.vinylstore.repository.ProductRepository
 
 class ViewModelFactory(
-    private val userDao: UserDao,
-    private val productDao: ProductDao,
-    private val cartDao: CartDao,
-    private val orderDao: OrderDao
+    private val authRepository: AuthRepository,
+    private val productRepository: ProductRepository,
+    private val cartRepository: CartRepository
 ) : ViewModelProvider.Factory {
     
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when (modelClass) {
-            AuthViewModel::class.java -> AuthViewModel(userDao) as T
-            ProductViewModel::class.java -> ProductViewModel(productDao) as T
-            CartViewModel::class.java -> CartViewModel(cartDao, productDao, orderDao) as T
-            OrderViewModel::class.java -> OrderViewModel(orderDao, productDao) as T
+            AuthViewModel::class.java -> AuthViewModel(authRepository) as T
+            ProductViewModel::class.java -> ProductViewModel(productRepository) as T
+            CartViewModel::class.java -> CartViewModel(cartRepository, productRepository) as T
+            OrderViewModel::class.java -> OrderViewModel() as T
             else -> throw IllegalArgumentException("Unknown ViewModel class")
         }
     }

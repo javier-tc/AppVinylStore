@@ -12,9 +12,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.vinylstore.data.VinylStoreDatabase
 import com.example.vinylstore.model.Product
 import com.example.vinylstore.model.User
+import com.example.vinylstore.network.RetrofitClient
+import com.example.vinylstore.network.SessionManager
+import com.example.vinylstore.repository.AuthRepository
+import com.example.vinylstore.repository.CartRepository
+import com.example.vinylstore.repository.ProductRepository
 import com.example.vinylstore.ui.screens.*
 import com.example.vinylstore.ui.theme.VinylStoreTheme
 import com.example.vinylstore.viewmodel.*
@@ -25,12 +29,24 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        val database = VinylStoreDatabase.getDatabase(this)
+        val sessionManager = SessionManager(this)
+        val authRepository = AuthRepository(
+            RetrofitClient.createAuthApi(sessionManager),
+            sessionManager
+        )
+        val productRepository = ProductRepository(
+            RetrofitClient.createProductApi(sessionManager),
+            sessionManager
+        )
+        val cartRepository = CartRepository(
+            RetrofitClient.createCartApi(sessionManager),
+            sessionManager
+        )
+        
         val viewModelFactory = ViewModelFactory(
-            database.userDao(),
-            database.productDao(),
-            database.cartDao(),
-            database.orderDao()
+            authRepository,
+            productRepository,
+            cartRepository
         )
         
         setContent {
@@ -47,7 +63,6 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
     val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
     val productViewModel: ProductViewModel = viewModel(factory = viewModelFactory) 
     val cartViewModel: CartViewModel = viewModel(factory = viewModelFactory)
-    val orderViewModel: OrderViewModel = viewModel(factory = viewModelFactory)
     
     var currentUser by remember { mutableStateOf<User?>(null) }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
@@ -168,6 +183,7 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
         }
         
         composable("order_history") {
+            val orderViewModel: OrderViewModel = viewModel(factory = viewModelFactory)
             OrderHistoryScreen(
                 orderViewModel = orderViewModel,
                 userId = currentUser?.id ?: 0,

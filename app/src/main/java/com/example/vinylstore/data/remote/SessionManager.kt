@@ -1,4 +1,4 @@
-package com.example.vinylstore.network
+package com.example.vinylstore.data.remote
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -51,5 +51,4 @@ class SessionManager(context: Context) {
         return getToken() != null
     }
 }
-
 

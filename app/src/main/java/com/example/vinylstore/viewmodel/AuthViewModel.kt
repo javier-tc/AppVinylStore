@@ -2,7 +2,7 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.model.User
+import com.example.vinylstore.data.model.User
 import com.example.vinylstore.repository.AuthRepository
 import com.example.vinylstore.util.Validation
 import com.example.vinylstore.util.ValidationResult
@@ -32,6 +32,7 @@ class AuthViewModel(
     private val _registerFormState = MutableStateFlow(
         RegisterFormState(
             nombre = "",
+            apellido = "",
             correo = "",
             password = "",
             errores = RegisterFormErrors()
@@ -74,6 +75,20 @@ class AuthViewModel(
             nombre = nombre,
             errores = _registerFormState.value.errores.copy(
                 nombre = validateName(nombre).let {
+                    when (it) {
+                        is ValidationState.Valid -> null
+                        is ValidationState.Invalid -> it.message
+                    }
+                }
+            )
+        )
+    }
+    
+    fun onApellidoChange(apellido: String) {
+        _registerFormState.value = _registerFormState.value.copy(
+            apellido = apellido,
+            errores = _registerFormState.value.errores.copy(
+                apellido = validateName(apellido).let {
                     when (it) {
                         is ValidationState.Valid -> null
                         is ValidationState.Invalid -> it.message
@@ -179,6 +194,7 @@ class AuthViewModel(
             
             //validar todos los campos antes de registrar
             val nombreValidation = validateName(estado.nombre)
+            val apellidoValidation = validateName(estado.apellido)
             val correoValidation = validateEmail(estado.correo)
             val passwordValidation = validatePassword(estado.password)
             
@@ -186,6 +202,10 @@ class AuthViewModel(
                 nombre = when (nombreValidation) {
                     is ValidationState.Valid -> null
                     is ValidationState.Invalid -> nombreValidation.message
+                },
+                apellido = when (apellidoValidation) {
+                    is ValidationState.Valid -> null
+                    is ValidationState.Invalid -> apellidoValidation.message
                 },
                 correo = when (correoValidation) {
                     is ValidationState.Valid -> null
@@ -200,18 +220,13 @@ class AuthViewModel(
             _registerFormState.value = estado.copy(errores = nuevosErrores)
             
             //si hay errores, no continuar
-            if (nuevosErrores.nombre != null || nuevosErrores.correo != null || nuevosErrores.password != null) {
+            if (nuevosErrores.nombre != null || nuevosErrores.apellido != null || nuevosErrores.correo != null || nuevosErrores.password != null) {
                 return@launch
             }
             
             _registerState.value = RegisterState.Loading
             
-            //separar nombre en firstName y lastName
-            val nameParts = estado.nombre.trim().split(" ", limit = 2)
-            val firstName = nameParts[0]
-            val lastName = if (nameParts.size > 1) nameParts[1] else ""
-            
-            authRepository.register(estado.correo, estado.password, firstName, lastName)
+            authRepository.register(estado.correo, estado.password, estado.nombre.trim(), estado.apellido.trim())
                 .onSuccess {
                     _registerState.value = RegisterState.Success
                 }
@@ -233,6 +248,7 @@ class AuthViewModel(
             _registerState.value = RegisterState.Initial
             _registerFormState.value = RegisterFormState(
                 nombre = "",
+                apellido = "",
                 correo = "",
                 password = "",
                 errores = RegisterFormErrors()
@@ -253,6 +269,7 @@ class AuthViewModel(
     
     data class RegisterFormState(
         val nombre: String,
+        val apellido: String,
         val correo: String,
         val password: String,
         val errores: RegisterFormErrors
@@ -260,6 +277,7 @@ class AuthViewModel(
     
     data class RegisterFormErrors(
         val nombre: String? = null,
+        val apellido: String? = null,
         val correo: String? = null,
         val password: String? = null
     )

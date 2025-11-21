@@ -1,6 +1,6 @@
-package com.example.vinylstore.network.api
+package com.example.vinylstore.data.remote.api
 
-import com.example.vinylstore.network.dto.*
+import com.example.vinylstore.data.remote.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -33,5 +33,4 @@ interface CartApi {
     @GET("api/cart/{userId}/total")
     suspend fun getCartTotal(@Path("userId") userId: Int): Response<CartTotalResponse>
 }
-
 

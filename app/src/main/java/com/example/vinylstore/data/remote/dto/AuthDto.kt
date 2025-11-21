@@ -1,4 +1,4 @@
-package com.example.vinylstore.network.dto
+package com.example.vinylstore.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
@@ -24,10 +24,6 @@ data class UpdateProfileRequest(
     val lastName: String?
 )
 
-data class UpdateRoleRequest(
-    val role: String
-)
-
 //response DTOs
 data class AuthResponse(
     val token: String,
@@ -44,11 +40,6 @@ data class UserProfileDto(
     val firstName: String,
     @SerializedName("lastName")
     val lastName: String,
-    val role: String,
-    @SerializedName("createdAt")
-    val createdAt: String,
-    @SerializedName("updatedAt")
-    val updatedAt: String
+    val role: String
 )
-
 

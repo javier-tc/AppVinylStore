@@ -1,4 +1,4 @@
-package com.example.vinylstore.network
+package com.example.vinylstore.data.remote
 
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -19,5 +19,4 @@ class AuthInterceptor(private val sessionManager: SessionManager) : Interceptor 
         return chain.proceed(newRequest)
     }
 }
-
 

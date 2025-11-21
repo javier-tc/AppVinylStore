@@ -2,7 +2,7 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.model.Product
+import com.example.vinylstore.data.model.Product
 import com.example.vinylstore.repository.ProductRepository
 import com.example.vinylstore.util.Validation
 import com.example.vinylstore.util.ValidationResult

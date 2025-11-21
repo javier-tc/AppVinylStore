@@ -1,4 +1,4 @@
-package com.example.vinylstore.network.dto
+package com.example.vinylstore.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
@@ -11,11 +11,7 @@ data class CartItemDto(
     val quantity: Int,
     @SerializedName("unitPrice")
     val unitPrice: Double,
-    val subtotal: Double,
-    @SerializedName("createdAt")
-    val createdAt: String?,
-    @SerializedName("updatedAt")
-    val updatedAt: String?
+    val subtotal: Double
 )
 
 data class AddCartItemRequest(
@@ -36,5 +32,4 @@ data class CartTotalResponse(
     @SerializedName("totalItems")
     val totalItems: Int
 )
-
 

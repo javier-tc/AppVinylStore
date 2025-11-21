@@ -1,19 +1,18 @@
 package com.example.vinylstore.repository
 
-import com.example.vinylstore.model.CartItem
-import com.example.vinylstore.network.SessionManager
-import com.example.vinylstore.network.api.CartApi
-import com.example.vinylstore.network.dto.AddCartItemRequest
-import com.example.vinylstore.network.dto.CartItemDto
-import com.example.vinylstore.network.dto.CartTotalResponse
-import com.example.vinylstore.network.dto.UpdateCartItemRequest
+import com.example.vinylstore.data.model.CartItem
+import com.example.vinylstore.data.remote.api.CartApi
+import com.example.vinylstore.data.remote.dto.AddCartItemRequest
+import com.example.vinylstore.data.remote.dto.CartItemDto
+import com.example.vinylstore.data.remote.dto.CartTotalResponse
+import com.example.vinylstore.data.remote.dto.UpdateCartItemRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 
 class CartRepository(
-    private val cartApi: CartApi,
-    private val sessionManager: SessionManager
+    private val cartApi: CartApi
 ) {
     private val _cartItems = MutableStateFlow<List<CartItem>>(emptyList())
     val cartItems: Flow<List<CartItem>> = _cartItems.asStateFlow()
@@ -39,7 +38,7 @@ class CartRepository(
             val response = cartApi.addItem(userId, request)
             if (response.isSuccessful && response.body() != null) {
                 val item = response.body()!!.toCartItem()
-                _cartItems.update { it + item }
+                _cartItems.value = _cartItems.value + item
                 Result.success(item)
             } else {
                 Result.failure(Exception("Error al agregar item: ${response.message()}"))
@@ -55,9 +54,7 @@ class CartRepository(
             val response = cartApi.updateItem(userId, itemId, request)
             if (response.isSuccessful && response.body() != null) {
                 val item = response.body()!!.toCartItem()
-                _cartItems.update { list ->
-                    list.map { if (it.id.toInt() == itemId) item else it }
-                }
+                _cartItems.value = _cartItems.value.map { if (it.id.toInt() == itemId) item else it }
                 Result.success(item)
             } else {
                 Result.failure(Exception("Error al actualizar item: ${response.message()}"))
@@ -71,7 +68,7 @@ class CartRepository(
         return try {
             val response = cartApi.deleteItem(userId, itemId)
             if (response.isSuccessful) {
-                _cartItems.update { it.filter { item -> item.id.toInt() != itemId } }
+                _cartItems.value = _cartItems.value.filter { item -> item.id.toInt() != itemId }
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Error al eliminar item: ${response.message()}"))
@@ -109,7 +106,7 @@ class CartRepository(
     }
     
     fun getCartItemCount(userId: Int): Flow<Int> {
-        return kotlinx.coroutines.flow.map(_cartItems.asStateFlow()) { items ->
+        return _cartItems.map { items ->
             items.count { it.userId == userId.toLong() }
         }
     }

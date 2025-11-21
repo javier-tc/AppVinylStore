@@ -2,9 +2,10 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.model.CartItem
-import com.example.vinylstore.model.Product
+import com.example.vinylstore.data.model.CartItem
+import com.example.vinylstore.data.model.Product
 import com.example.vinylstore.repository.CartRepository
+import com.example.vinylstore.repository.OrderRepository
 import com.example.vinylstore.repository.ProductRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.first
 
 class CartViewModel(
     private val cartRepository: CartRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val orderRepository: OrderRepository
 ) : ViewModel() {
     
     fun getCartItems(userId: Long): Flow<List<CartItemWithProduct>> {
@@ -96,10 +98,38 @@ class CartViewModel(
         return result.getOrNull()?.total ?: 0.0
     }
     
-    suspend fun confirmOrder(cartItems: List<CartItem>, userId: Long) {
-        //en una implementación real, esto debería crear una orden en el backend
-        //por ahora solo limpiamos el carrito
-        cartRepository.clearCart(userId.toInt())
+    suspend fun confirmOrder(cartItems: List<CartItem>, userId: Long): Result<Unit> {
+        return try {
+            //crear una orden por cada item del carrito
+            cartItems.forEach { cartItem ->
+                val productResult = productRepository.getProductById(cartItem.productId)
+                val product = productResult.getOrNull()
+                
+                if (product != null) {
+                    val orderResult = orderRepository.createOrder(
+                        productId = cartItem.productId,
+                        cantidad = cartItem.cantidad,
+                        precioUnitario = product.precio
+                    )
+                    
+                    if (orderResult.isFailure) {
+                        return Result.failure(
+                            Exception("Error al crear pedido para ${product.titulo}: ${orderResult.exceptionOrNull()?.message}")
+                        )
+                    }
+                }
+            }
+            
+            //limpiar el carrito solo si todas las órdenes se crearon exitosamente
+            val clearResult = cartRepository.clearCart(userId.toInt())
+            if (clearResult.isSuccess) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Pedidos creados pero error al limpiar carrito"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al confirmar pedido: ${e.message}"))
+        }
     }
 }
 

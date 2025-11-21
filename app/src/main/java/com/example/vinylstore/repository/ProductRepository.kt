@@ -1,18 +1,16 @@
 package com.example.vinylstore.repository
 
-import com.example.vinylstore.model.Product
-import com.example.vinylstore.network.SessionManager
-import com.example.vinylstore.network.api.ProductApi
-import com.example.vinylstore.network.dto.CreateProductRequest
-import com.example.vinylstore.network.dto.UpdateStockRequest
+import com.example.vinylstore.data.model.Product
+import com.example.vinylstore.data.remote.api.ProductApi
+import com.example.vinylstore.data.remote.dto.CreateProductRequest
+import com.example.vinylstore.data.remote.dto.UpdateStockRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class ProductRepository(
-    private val productApi: ProductApi,
-    private val sessionManager: SessionManager
+    private val productApi: ProductApi
 ) {
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: Flow<List<Product>> = _products.asStateFlow()
@@ -40,20 +38,6 @@ class ProductRepository(
                 Result.success(product)
             } else {
                 Result.failure(Exception("Error al obtener producto: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    
-    suspend fun searchProducts(query: String): Result<List<Product>> {
-        return try {
-            val response = productApi.searchProducts(query)
-            if (response.isSuccessful && response.body() != null) {
-                val products = response.body()!!.map { it.toProduct() }
-                Result.success(products)
-            } else {
-                Result.failure(Exception("Error al buscar productos: ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

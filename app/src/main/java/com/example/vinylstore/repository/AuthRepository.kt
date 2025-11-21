@@ -1,16 +1,20 @@
 package com.example.vinylstore.repository
 
-import com.example.vinylstore.model.User
-import com.example.vinylstore.network.SessionManager
-import com.example.vinylstore.network.api.AuthApi
-import com.example.vinylstore.network.dto.*
+import com.example.vinylstore.data.model.User
+import com.example.vinylstore.data.remote.SessionManager
+import com.example.vinylstore.data.remote.api.AuthApi
+import com.example.vinylstore.data.remote.dto.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AuthRepository(
     private val authApi: AuthApi,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
 ) {
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
@@ -20,7 +24,9 @@ class AuthRepository(
         if (sessionManager.isLoggedIn()) {
             val userId = sessionManager.getUserId()
             if (userId > 0) {
-                loadUserProfile(userId)
+                scope.launch {
+                    loadUserProfile(userId)
+                }
             }
         }
     }
@@ -37,10 +43,16 @@ class AuthRepository(
                 loadUserProfile(authResponse.userId)
                 Result.success(authResponse)
             } else {
-                Result.failure(Exception("Error al iniciar sesión: ${response.message()}"))
+                val errorBody = response.errorBody()?.string() ?: "Sin detalles"
+                val errorMessage = "Error al iniciar sesión: ${response.code()} - ${response.message()}. Detalles: $errorBody"
+                Result.failure(Exception(errorMessage))
             }
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("Timeout: El servidor no respondió a tiempo. Verifica tu conexión."))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Error de conexión: No se pudo conectar al servidor. Verifica tu conexión a internet."))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error al iniciar sesión: ${e.message ?: e.javaClass.simpleName}"))
         }
     }
     
@@ -113,10 +125,6 @@ class AuthRepository(
         getProfile(userId).onSuccess { profile ->
             _currentUser.value = profile.toUser()
         }
-    }
-    
-    fun getCurrentUser(): User? {
-        return _currentUser.value
     }
 }
 

@@ -1,6 +1,6 @@
-package com.example.vinylstore.network.api
+package com.example.vinylstore.data.remote.api
 
-import com.example.vinylstore.network.dto.*
+import com.example.vinylstore.data.remote.dto.*
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -23,14 +23,5 @@ interface AuthApi {
         @Body request: UpdateProfileRequest
     ): Response<UserProfileDto>
     
-    @GET("api/auth/users")
-    suspend fun getUsers(): Response<List<UserProfileDto>>
-    
-    @PUT("api/auth/users/{userId}/role")
-    suspend fun updateUserRole(
-        @Path("userId") userId: Int,
-        @Body request: UpdateRoleRequest
-    ): Response<UserProfileDto>
 }
-
 

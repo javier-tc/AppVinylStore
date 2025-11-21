@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.vinylstore.model.Product
+import com.example.vinylstore.data.model.Product
 import com.example.vinylstore.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

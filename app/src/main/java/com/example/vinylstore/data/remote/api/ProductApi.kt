@@ -1,8 +1,8 @@
-package com.example.vinylstore.network.api
+package com.example.vinylstore.data.remote.api
 
-import com.example.vinylstore.network.dto.ProductDto
-import com.example.vinylstore.network.dto.CreateProductRequest
-import com.example.vinylstore.network.dto.UpdateStockRequest
+import com.example.vinylstore.data.remote.dto.ProductDto
+import com.example.vinylstore.data.remote.dto.CreateProductRequest
+import com.example.vinylstore.data.remote.dto.UpdateStockRequest
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -12,9 +12,6 @@ interface ProductApi {
     
     @GET("api/products/{id}")
     suspend fun getProductById(@Path("id") id: Int): Response<ProductDto>
-    
-    @GET("api/products/search")
-    suspend fun searchProducts(@Query("q") query: String): Response<List<ProductDto>>
     
     @POST("api/products")
     suspend fun createProduct(@Body request: CreateProductRequest): Response<ProductDto>
@@ -34,5 +31,4 @@ interface ProductApi {
         @Body request: UpdateStockRequest
     ): Response<ProductDto>
 }
-
 

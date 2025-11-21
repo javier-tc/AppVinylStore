@@ -12,12 +12,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.vinylstore.model.Product
-import com.example.vinylstore.model.User
-import com.example.vinylstore.network.RetrofitClient
-import com.example.vinylstore.network.SessionManager
+import com.example.vinylstore.data.model.Product
+import com.example.vinylstore.data.model.User
+import com.example.vinylstore.data.remote.RetrofitClient
+import com.example.vinylstore.data.remote.SessionManager
 import com.example.vinylstore.repository.AuthRepository
 import com.example.vinylstore.repository.CartRepository
+import com.example.vinylstore.repository.OrderRepository
 import com.example.vinylstore.repository.ProductRepository
 import com.example.vinylstore.ui.screens.*
 import com.example.vinylstore.ui.theme.VinylStoreTheme
@@ -35,18 +36,20 @@ class MainActivity : ComponentActivity() {
             sessionManager
         )
         val productRepository = ProductRepository(
-            RetrofitClient.createProductApi(sessionManager),
-            sessionManager
+            RetrofitClient.createProductApi(sessionManager)
         )
         val cartRepository = CartRepository(
-            RetrofitClient.createCartApi(sessionManager),
-            sessionManager
+            RetrofitClient.createCartApi(sessionManager)
+        )
+        val orderRepository = OrderRepository(
+            RetrofitClient.createOrderApi(sessionManager)
         )
         
         val viewModelFactory = ViewModelFactory(
             authRepository,
             productRepository,
-            cartRepository
+            cartRepository,
+            orderRepository
         )
         
         setContent {
@@ -65,12 +68,23 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
     val cartViewModel: CartViewModel = viewModel(factory = viewModelFactory)
     
     var currentUser by remember { mutableStateOf<User?>(null) }
+    var previousUser by remember { mutableStateOf<User?>(null) }
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     var editingProduct by remember { mutableStateOf<Product?>(null) }
     
     LaunchedEffect(Unit) {
         authViewModel.currentUser.collect { user ->
+            previousUser = currentUser
             currentUser = user
+        }
+    }
+    
+    //navegar a login cuando el usuario cierra sesión (cambia de no-null a null)
+    LaunchedEffect(currentUser) {
+        if (previousUser != null && currentUser == null && navController.currentDestination?.route != "login") {
+            navController.navigate("login") {
+                popUpTo(0) { inclusive = true }
+            }
         }
     }
     
@@ -164,9 +178,7 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
                 isAdmin = currentUser?.rol == "administrador",
                 onLogout = {
                     authViewModel.logout()
-                    navController.navigate("products") {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    //la navegación se maneja automáticamente cuando currentUser se vuelve null
                 },
                 onBack = {
                     navController.popBackStack()

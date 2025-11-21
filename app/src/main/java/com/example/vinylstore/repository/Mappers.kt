@@ -1,7 +1,7 @@
 package com.example.vinylstore.repository
 
-import com.example.vinylstore.model.*
-import com.example.vinylstore.network.dto.*
+import com.example.vinylstore.data.model.*
+import com.example.vinylstore.data.remote.dto.*
 
 //mapeo de ProductDto a Product
 fun ProductDto.toProduct(): Product {
@@ -51,6 +51,33 @@ fun CartItemDto.toCartItem(): CartItem {
         productId = this.productId,
         cantidad = this.quantity,
         userId = this.userId.toLong()
+    )
+}
+
+//mapeo de OrderResponse a Order
+fun com.example.vinylstore.data.remote.dto.OrderResponse.toOrder(): Order {
+    //convertir fecha ISO string a timestamp Long
+    val fechaTimestamp = try {
+        val formatter = java.time.format.DateTimeFormatter.ISO_DATE_TIME
+        val dateTime = java.time.LocalDateTime.parse(this.fecha, formatter)
+        val zonedDateTime = dateTime.atZone(java.time.ZoneId.systemDefault())
+        zonedDateTime.toInstant().toEpochMilli()
+    } catch (e: Exception) {
+        System.currentTimeMillis() //fallback a fecha actual si falla el parseo
+    }
+    
+    //normalizar estado a minúsculas para el modelo local
+    val estadoNormalizado = this.estado.lowercase()
+    
+    return Order(
+        id = this.id,
+        productId = this.productId,
+        userId = this.userId,
+        cantidad = this.cantidad,
+        precioUnitario = this.precioUnitario,
+        total = this.total,
+        fecha = fechaTimestamp,
+        estado = estadoNormalizado
     )
 }
 

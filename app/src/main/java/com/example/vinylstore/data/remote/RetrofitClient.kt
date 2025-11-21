@@ -1,8 +1,9 @@
-package com.example.vinylstore.network
+package com.example.vinylstore.data.remote
 
-import com.example.vinylstore.network.api.AuthApi
-import com.example.vinylstore.network.api.CartApi
-import com.example.vinylstore.network.api.ProductApi
+import com.example.vinylstore.data.remote.api.AuthApi
+import com.example.vinylstore.data.remote.api.CartApi
+import com.example.vinylstore.data.remote.api.OrderApi
+import com.example.vinylstore.data.remote.api.ProductApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -13,7 +14,7 @@ object RetrofitClient {
     //URL base del backend
     //10.0.2.2 es la dirección del emulador Android para acceder a localhost
     //Para dispositivos físicos, usar la IP de tu máquina en la red local (ej: "http://192.168.1.100:8080/")
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private const val BASE_URL = "http://jabirpc.ddns.net:8080/"
     
     private fun createOkHttpClient(sessionManager: SessionManager): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -47,6 +48,10 @@ object RetrofitClient {
     
     fun createCartApi(sessionManager: SessionManager): CartApi {
         return createRetrofit(sessionManager).create(CartApi::class.java)
+    }
+    
+    fun createOrderApi(sessionManager: SessionManager): OrderApi {
+        return createRetrofit(sessionManager).create(OrderApi::class.java)
     }
 }
 

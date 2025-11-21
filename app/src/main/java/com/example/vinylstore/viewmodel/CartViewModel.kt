@@ -2,110 +2,133 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.data.CartDao
-import com.example.vinylstore.data.OrderDao
-import com.example.vinylstore.data.ProductDao
-import com.example.vinylstore.model.CartItem
-import com.example.vinylstore.model.Order
-import com.example.vinylstore.model.Product
-import kotlinx.coroutines.Dispatchers
+import com.example.vinylstore.data.model.CartItem
+import com.example.vinylstore.data.model.Product
+import com.example.vinylstore.repository.CartRepository
+import com.example.vinylstore.repository.OrderRepository
+import com.example.vinylstore.repository.ProductRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.first
 
 class CartViewModel(
-    private val cartDao: CartDao,
-    private val productDao: ProductDao,
-    private val orderDao: OrderDao
+    private val cartRepository: CartRepository,
+    private val productRepository: ProductRepository,
+    private val orderRepository: OrderRepository
 ) : ViewModel() {
     
     fun getCartItems(userId: Long): Flow<List<CartItemWithProduct>> {
-        return cartDao.getCartItems(userId).map { cartItems ->
-            cartItems.map { cartItem ->
-                val product = productDao.getProductById(cartItem.productId) ?: 
-                    Product(0, "", "", 0.0, "", "", "")
-                CartItemWithProduct(cartItem, product)
+        return cartRepository.cartItems.flatMapLatest { cartItems ->
+            val filteredItems = cartItems.filter { it.userId == userId }
+            if (filteredItems.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                flow {
+                    val result = mutableListOf<CartItemWithProduct>()
+                    filteredItems.forEach { cartItem ->
+                        val productResult = productRepository.getProductById(cartItem.productId)
+                        val product = productResult.getOrNull() ?: 
+                            Product(0, "", "", 0.0, "", "", "")
+                        result.add(CartItemWithProduct(cartItem, product))
+                    }
+                    emit(result)
+                }
             }
         }
     }
     
     fun getCartItemCount(userId: Long): Flow<Int> {
-        return cartDao.getCartItemCount(userId)
+        return cartRepository.getCartItemCount(userId.toInt())
+    }
+    
+    fun loadCart(userId: Long) {
+        viewModelScope.launch {
+            cartRepository.getCart(userId.toInt())
+        }
     }
     
     fun addToCart(productId: Int, userId: Long, quantity: Int = 1) {
         viewModelScope.launch {
-            //verificar si ya existe un item con ese producto
-            val existingItems = cartDao.getCartItems(userId).first()
-            val existingItem = existingItems.find { it.productId == productId }
+            val existingItems = cartRepository.cartItems.first()
+            val existingItem = existingItems.find { 
+                it.productId == productId && it.userId == userId 
+            }
             
             if (existingItem != null) {
-                //si existe, actualizar la cantidad
-                val updatedItem = existingItem.copy(cantidad = existingItem.cantidad + quantity)
-                cartDao.updateCartItem(updatedItem)
-            } else {
-                //si no existe, crear uno nuevo
-                val newCartItem = CartItem(
-                    productId = productId,
-                    cantidad = quantity,
-                    userId = userId
+                val newQuantity = existingItem.cantidad + quantity
+                cartRepository.updateItem(
+                    userId.toInt(),
+                    existingItem.id.toInt(),
+                    newQuantity
                 )
-                cartDao.insertCartItem(newCartItem)
+            } else {
+                cartRepository.addItem(userId.toInt(), productId, quantity)
             }
         }
     }
     
     fun removeFromCart(cartItem: CartItem) {
         viewModelScope.launch {
-            cartDao.deleteCartItem(cartItem)
+            cartRepository.deleteItem(cartItem.userId.toInt(), cartItem.id.toInt())
         }
     }
     
     fun updateCartItemQuantity(cartItem: CartItem, newQuantity: Int) {
         viewModelScope.launch {
             if (newQuantity > 0) {
-                val updatedItem = cartItem.copy(cantidad = newQuantity)
-                cartDao.updateCartItem(updatedItem)
+                cartRepository.updateItem(
+                    cartItem.userId.toInt(),
+                    cartItem.id.toInt(),
+                    newQuantity
+                )
             } else {
-                cartDao.deleteCartItem(cartItem)
+                cartRepository.deleteItem(cartItem.userId.toInt(), cartItem.id.toInt())
             }
         }
     }
     
     fun clearCart(userId: Long) {
         viewModelScope.launch {
-            cartDao.clearCart(userId)
+            cartRepository.clearCart(userId.toInt())
         }
     }
     
     suspend fun getTotalPrice(userId: Long): Double {
-        val cartItems = cartDao.getCartItems(userId).first()
-        return cartItems.sumOf { cartItem ->
-            val product = productDao.getProductById(cartItem.productId)
-            (product?.precio ?: 0.0) * cartItem.cantidad
-        }
+        val result = cartRepository.getCartTotal(userId.toInt())
+        return result.getOrNull()?.total ?: 0.0
     }
     
-    suspend fun confirmOrder(cartItems: List<CartItem>, userId: Long) {
-        cartItems.forEach { cartItem ->
-            val product = productDao.getProductById(cartItem.productId)
-            if (product != null && product.stock >= cartItem.cantidad) {
-                //crear la orden en la base de datos
-                val order = Order(
-                    productId = cartItem.productId,
-                    userId = userId,
-                    cantidad = cartItem.cantidad,
-                    precioUnitario = product.precio,
-                    total = product.precio * cartItem.cantidad,
-                    estado = "confirmado"
-                )
-                orderDao.insertOrder(order)
+    suspend fun confirmOrder(cartItems: List<CartItem>, userId: Long): Result<Unit> {
+        return try {
+            //crear una orden por cada item del carrito
+            cartItems.forEach { cartItem ->
+                val productResult = productRepository.getProductById(cartItem.productId)
+                val product = productResult.getOrNull()
                 
-                //reducir el stock
-                val nuevoStock = product.stock - cartItem.cantidad
-                productDao.updateStock(cartItem.productId, nuevoStock)
+                if (product != null) {
+                    val orderResult = orderRepository.createOrder(
+                        productId = cartItem.productId,
+                        cantidad = cartItem.cantidad,
+                        precioUnitario = product.precio
+                    )
+                    
+                    if (orderResult.isFailure) {
+                        return Result.failure(
+                            Exception("Error al crear pedido para ${product.titulo}: ${orderResult.exceptionOrNull()?.message}")
+                        )
+                    }
+                }
             }
+            
+            //limpiar el carrito solo si todas las órdenes se crearon exitosamente
+            val clearResult = cartRepository.clearCart(userId.toInt())
+            if (clearResult.isSuccess) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Pedidos creados pero error al limpiar carrito"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Error al confirmar pedido: ${e.message}"))
         }
     }
 }

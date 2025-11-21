@@ -38,6 +38,10 @@ fun CartScreen(
     val scope = rememberCoroutineScope()
     var totalPrice by remember { mutableStateOf(0.0) }
     
+    LaunchedEffect(currentUserId) {
+        cartViewModel.loadCart(currentUserId)
+    }
+    
     LaunchedEffect(cartItems) {
         scope.launch {
             totalPrice = cartViewModel.getTotalPrice(currentUserId)
@@ -45,15 +49,20 @@ fun CartScreen(
     }
     
     var isConfirmingOrder by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     
     val handleConfirmOrder: () -> Unit = {
         scope.launch {
             isConfirmingOrder = true
-            cartViewModel.confirmOrder(cartItems.map { it.cartItem }, currentUserId)
-            cartViewModel.clearCart(currentUserId)
-            delay(500)
+            errorMessage = null
+            val result = cartViewModel.confirmOrder(cartItems.map { it.cartItem }, currentUserId)
             isConfirmingOrder = false
-            onConfirmOrder() //llama al callback para navegar
+            
+            result.onSuccess {
+                onConfirmOrder() //llama al callback para navegar
+            }.onFailure { exception ->
+                errorMessage = exception.message ?: "Error al confirmar pedido"
+            }
         }
     }
     
@@ -122,29 +131,51 @@ fun CartScreen(
                 )
             }
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(
-                    items = cartItems,
-                    key = { it.cartItem.id }
-                ) { cartItemWithProduct ->
-                    CartItemCard(
-                        cartItemWithProduct = cartItemWithProduct,
-                        onUpdateQuantity = { quantity ->
-                            cartViewModel.updateCartItemQuantity(
-                                cartItemWithProduct.cartItem,
-                                quantity
-                            )
-                        },
-                        onRemove = {
-                            cartViewModel.removeFromCart(cartItemWithProduct.cartItem)
-                        }
-                    )
+                if (errorMessage != null) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        )
+                    ) {
+                        Text(
+                            text = errorMessage!!,
+                            modifier = Modifier.padding(16.dp),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = cartItems,
+                        key = { it.cartItem.id }
+                    ) { cartItemWithProduct ->
+                        CartItemCard(
+                            cartItemWithProduct = cartItemWithProduct,
+                            onUpdateQuantity = { quantity ->
+                                cartViewModel.updateCartItemQuantity(
+                                    cartItemWithProduct.cartItem,
+                                    quantity
+                                )
+                            },
+                            onRemove = {
+                                cartViewModel.removeFromCart(cartItemWithProduct.cartItem)
+                            }
+                        )
+                    }
                 }
             }
         }

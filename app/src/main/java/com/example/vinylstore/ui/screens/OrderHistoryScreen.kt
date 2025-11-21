@@ -31,7 +31,11 @@ fun OrderHistoryScreen(
     userId: Long,
     onBack: () -> Unit
 ) {
-    val orders by remember { orderViewModel.getOrdersByUser(userId) }.collectAsState(initial = emptyList())
+    val orders by orderViewModel.getOrdersByUser(userId).collectAsState(initial = emptyList())
+    
+    LaunchedEffect(userId) {
+        orderViewModel.refreshOrders()
+    }
     
     Scaffold(
         topBar = {

@@ -2,81 +2,90 @@ package com.example.vinylstore.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.vinylstore.data.OrderDao
-import com.example.vinylstore.data.ProductDao
-import com.example.vinylstore.model.CartItem
-import com.example.vinylstore.model.Order
-import kotlinx.coroutines.flow.*
+import com.example.vinylstore.data.model.Order
+import com.example.vinylstore.data.model.Product
+import com.example.vinylstore.repository.OrderRepository
+import com.example.vinylstore.repository.ProductRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 
 class OrderViewModel(
-    private val orderDao: OrderDao,
-    private val productDao: ProductDao
+    private val orderRepository: OrderRepository,
+    private val productRepository: ProductRepository
 ) : ViewModel() {
     
+    init {
+        viewModelScope.launch {
+            orderRepository.getMyOrders()
+        }
+    }
+    
     fun getOrdersByUser(userId: Long): Flow<List<OrderWithProduct>> {
-        return orderDao.getOrdersByUser(userId).flatMapLatest { orders ->
-            flow {
-                val result = orders.map { order ->
-                    val product = productDao.getProductById(order.productId)
-                    OrderWithProduct(order, product)
-                }
-                emit(result)
-            }
-        }
-    }
-    
-    fun getAllOrders(): Flow<List<OrderWithProduct>> {
-        return orderDao.getAllOrders().flatMapLatest { orders ->
-            flow {
-                val result = orders.map { order ->
-                    val product = productDao.getProductById(order.productId)
-                    OrderWithProduct(order, product)
-                }
-                emit(result)
-            }
-        }
-    }
-    
-    fun confirmOrder(cartItems: List<CartItem>, userId: Long) {
-        viewModelScope.launch {
-            cartItems.forEach { cartItem ->
-                val product = productDao.getProductById(cartItem.productId)
-                if (product != null) {
-                    val order = Order(
-                        productId = cartItem.productId,
-                        userId = userId,
-                        cantidad = cartItem.cantidad,
-                        precioUnitario = product.precio,
-                        total = product.precio * cartItem.cantidad,
-                        estado = "confirmado"
-                    )
-                    orderDao.insertOrder(order)
-                    
-                    //reducir stock
-                    val nuevoStock = product.stock - cartItem.cantidad
-                    if (nuevoStock >= 0) {
-                        productDao.updateStock(cartItem.productId, nuevoStock)
+        return orderRepository.orders.flatMapLatest { orders ->
+            val userOrders = orders.filter { it.userId == userId }
+            if (userOrders.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                flow {
+                    val result = mutableListOf<OrderWithProduct>()
+                    userOrders.forEach { order ->
+                        //intentar obtener el producto desde el repository primero
+                        val productResult = productRepository.getProductById(order.productId)
+                        val product = productResult.getOrNull()
+                        result.add(OrderWithProduct(order, product))
                     }
+                    emit(result)
                 }
             }
         }
     }
     
-    fun updateOrderStatus(orderId: Long, estado: String) {
-        viewModelScope.launch {
-            orderDao.updateOrderStatus(orderId, estado)
+    fun getAllOrders(estado: String? = null): Flow<List<OrderWithProduct>> {
+        return orderRepository.orders.flatMapLatest { orders ->
+            val filteredOrders = if (estado != null) {
+                orders.filter { it.estado == estado }
+            } else {
+                orders
+            }
+            if (filteredOrders.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                flow {
+                    val result = mutableListOf<OrderWithProduct>()
+                    filteredOrders.forEach { order ->
+                        val productResult = productRepository.getProductById(order.productId)
+                        val product = productResult.getOrNull()
+                        result.add(OrderWithProduct(order, product))
+                    }
+                    emit(result)
+                }
+            }
         }
     }
     
-    sealed class OrderState {
-        object Success : OrderState()
-        data class Error(val message: String) : OrderState()
+    fun refreshOrders() {
+        viewModelScope.launch {
+            orderRepository.getMyOrders()
+        }
+    }
+    
+    fun refreshAllOrders() {
+        viewModelScope.launch {
+            orderRepository.getAllOrders()
+        }
+    }
+    
+    fun refreshOrdersByEstado(estado: String) {
+        viewModelScope.launch {
+            orderRepository.getOrdersByEstado(estado)
+        }
     }
 }
 
 data class OrderWithProduct(
     val order: Order,
-    val product: com.example.vinylstore.model.Product?
+    val product: Product?
 )

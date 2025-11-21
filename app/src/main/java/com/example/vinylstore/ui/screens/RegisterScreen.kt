@@ -75,6 +75,24 @@ fun RegisterScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         OutlinedTextField(
+            value = estado.value.apellido,
+            onValueChange = viewModel::onApellidoChange,
+            label = { Text("Apellido") },
+            leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+            isError = estado.value.errores.apellido != null,
+            supportingText = {
+                estado.value.errores.apellido?.let {
+                    Text(text = it, color = MaterialTheme.colorScheme.error)
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        OutlinedTextField(
             value = estado.value.correo,
             onValueChange = viewModel::onCorreoChange,
             label = { Text("Correo electrónico") },

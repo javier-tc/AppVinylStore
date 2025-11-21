@@ -25,7 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
-import com.example.vinylstore.model.Product
+import com.example.vinylstore.data.model.Product
 import com.example.vinylstore.viewmodel.CartViewModel
 import com.example.vinylstore.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay

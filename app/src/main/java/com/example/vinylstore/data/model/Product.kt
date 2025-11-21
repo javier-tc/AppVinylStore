@@ -1,11 +1,6 @@
-package com.example.vinylstore.model
+package com.example.vinylstore.data.model
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
-@Entity(tableName = "products")
 data class Product(
-    @PrimaryKey
     val id: Int,
     val titulo: String,
     val artista: String,
@@ -15,3 +10,4 @@ data class Product(
     val imagenUrl: String,
     val stock: Int = 0 //cantidad disponible
 )
+

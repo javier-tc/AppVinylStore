@@ -2,6 +2,7 @@ package com.example.vinylstore.data.remote
 
 import com.example.vinylstore.data.remote.api.AuthApi
 import com.example.vinylstore.data.remote.api.CartApi
+import com.example.vinylstore.data.remote.api.MusicApi
 import com.example.vinylstore.data.remote.api.OrderApi
 import com.example.vinylstore.data.remote.api.ProductApi
 import okhttp3.OkHttpClient
@@ -15,6 +16,9 @@ object RetrofitClient {
     //10.0.2.2 es la dirección del emulador Android para acceder a localhost
     //Para dispositivos físicos, usar la IP de tu máquina en la red local (ej: "http://192.168.1.100:8080/")
     private const val BASE_URL = "http://jabirpc.ddns.net:8080/"
+    
+    // URL base para la API externa de Last.fm
+    private const val LAST_FM_BASE_URL = "http://ws.audioscrobbler.com/"
     
     private fun createOkHttpClient(sessionManager: SessionManager): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -38,6 +42,26 @@ object RetrofitClient {
             .build()
     }
     
+    // Cliente Retrofit para la API externa (sin autenticación del backend)
+    private fun createExternalRetrofit(): Retrofit {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+        
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
+        
+        return Retrofit.Builder()
+            .baseUrl(LAST_FM_BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+    
     fun createAuthApi(sessionManager: SessionManager): AuthApi {
         return createRetrofit(sessionManager).create(AuthApi::class.java)
     }
@@ -52,6 +76,10 @@ object RetrofitClient {
     
     fun createOrderApi(sessionManager: SessionManager): OrderApi {
         return createRetrofit(sessionManager).create(OrderApi::class.java)
+    }
+    
+    fun createMusicApi(): MusicApi {
+        return createExternalRetrofit().create(MusicApi::class.java)
     }
 }
 

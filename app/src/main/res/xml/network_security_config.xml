@@ -3,5 +3,8 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">jabirpc.ddns.net</domain>
     </domain-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">ws.audioscrobbler.com</domain>
+    </domain-config>
 </network-security-config>
 

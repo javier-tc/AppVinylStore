@@ -17,8 +17,8 @@ object RetrofitClient {
     //Para dispositivos físicos, usar la IP de tu máquina en la red local (ej: "http://192.168.1.100:8080/")
     private const val BASE_URL = "http://jabirpc.ddns.net:8080/"
     
-    // URL base para la API externa de Last.fm
-    private const val LAST_FM_BASE_URL = "http://ws.audioscrobbler.com/"
+    // URL base para la API externa de Last.fm (usando HTTPS)
+    private const val LAST_FM_BASE_URL = "https://ws.audioscrobbler.com/"
     
     private fun createOkHttpClient(sessionManager: SessionManager): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {

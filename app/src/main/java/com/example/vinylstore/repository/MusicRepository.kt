@@ -19,10 +19,12 @@ class MusicRepository(
                 val recommendations = tracks.map { it.toMusicRecommendation() }
                 Result.success(recommendations)
             } else {
-                Result.failure(Exception("Error al obtener recomendaciones: ${response.message()}"))
+                val errorBody = response.errorBody()?.string() ?: "Sin detalles"
+                val errorMessage = "Error ${response.code()}: ${response.message()}. $errorBody"
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión: ${e.message}"))
         }
     }
     
@@ -38,10 +40,12 @@ class MusicRepository(
                 val recommendations = tracks.map { it.toMusicRecommendation() }
                 Result.success(recommendations)
             } else {
-                Result.failure(Exception("Error al obtener recomendaciones: ${response.message()}"))
+                val errorBody = response.errorBody()?.string() ?: "Sin detalles"
+                val errorMessage = "Error ${response.code()}: ${response.message()}. $errorBody"
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión: ${e.message}"))
         }
     }
     

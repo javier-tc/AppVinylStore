@@ -46,9 +46,8 @@ class MainActivity : ComponentActivity() {
             RetrofitClient.createOrderApi(sessionManager)
         )
         
-        // API Key de Last.fm (puedes obtener una gratuita en https://www.last.fm/api/account/create)
-        // Por ahora usamos una key de demostración, pero deberías usar tu propia key
-        val lastFmApiKey = "b25b959554ed76058ac220b7b2e0d026" // Key pública de demostración
+        // API Key de Last.fm - VinylStore
+        val lastFmApiKey = "e57b91397ed0950bb0e4ef8e33c367b3"
         val musicRepository = MusicRepository(
             RetrofitClient.createMusicApi(),
             lastFmApiKey

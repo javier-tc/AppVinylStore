@@ -18,6 +18,7 @@ import com.example.vinylstore.data.remote.RetrofitClient
 import com.example.vinylstore.data.remote.SessionManager
 import com.example.vinylstore.repository.AuthRepository
 import com.example.vinylstore.repository.CartRepository
+import com.example.vinylstore.repository.MusicRepository
 import com.example.vinylstore.repository.OrderRepository
 import com.example.vinylstore.repository.ProductRepository
 import com.example.vinylstore.ui.screens.*
@@ -45,11 +46,19 @@ class MainActivity : ComponentActivity() {
             RetrofitClient.createOrderApi(sessionManager)
         )
         
+        // API Key de Last.fm - VinylStore
+        val lastFmApiKey = "e57b91397ed0950bb0e4ef8e33c367b3"
+        val musicRepository = MusicRepository(
+            RetrofitClient.createMusicApi(),
+            lastFmApiKey
+        )
+        
         val viewModelFactory = ViewModelFactory(
             authRepository,
             productRepository,
             cartRepository,
-            orderRepository
+            orderRepository,
+            musicRepository
         )
         
         setContent {
@@ -172,10 +181,12 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
         }
         
         composable("profile") {
+            val musicViewModel: MusicViewModel = viewModel(factory = viewModelFactory)
             ProfileScreen(
                 userName = currentUser?.nombre ?: "",
                 userEmail = currentUser?.email ?: "",
                 isAdmin = currentUser?.rol == "administrador",
+                musicViewModel = musicViewModel,
                 onLogout = {
                     authViewModel.logout()
                     //la navegación se maneja automáticamente cuando currentUser se vuelve null

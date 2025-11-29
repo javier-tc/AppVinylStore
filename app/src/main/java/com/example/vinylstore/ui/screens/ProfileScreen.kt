@@ -14,11 +14,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
@@ -33,7 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.viewmodel.MusicViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -57,6 +59,7 @@ fun ProfileScreen(
     var imageFile by remember { mutableStateOf<File?>(null) }
     var isProcessingImage by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
     
     // Estados del MusicViewModel
     val recommendations by musicViewModel.recommendations.collectAsState()
@@ -150,6 +153,7 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .verticalScroll(scrollState)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -169,8 +173,11 @@ fun ProfileScreen(
                         )
                     }
                 } else if (selectedImageUri != null) {
-                    AsyncImage(
-                        model = selectedImageUri,
+                    val profilePainter = rememberAsyncImagePainter(
+                        model = selectedImageUri
+                    )
+                    Image(
+                        painter = profilePainter,
                         contentDescription = "Imagen de perfil",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -311,6 +318,7 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
+                            modifier = Modifier.weight(1f),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
@@ -320,13 +328,15 @@ fun ProfileScreen(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "Recomendaciones Musicales",
+                                text = "Recomendaciones para ti",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        TextButton(onClick = { musicViewModel.loadTopTracks() }) {
-                            Text("Actualizar")
+                        IconButton(onClick = { musicViewModel.loadTopTracks() }) {
+                            Icon(Icons.Filled.Refresh, contentDescription = "Actualizar")
                         }
                     }
                     
@@ -377,14 +387,40 @@ fun ProfileScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        AsyncImage(
-                                            model = recommendation.imageUrl,
-                                            contentDescription = recommendation.trackName,
+                                        Box(
                                             modifier = Modifier
                                                 .size(60.dp)
-                                                .clip(RoundedCornerShape(8.dp)),
-                                            contentScale = ContentScale.Crop
-                                        )
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                        ) {
+                                            val painter = rememberAsyncImagePainter(
+                                                model = recommendation.imageUrl
+                                            )
+                                            Image(
+                                                painter = painter,
+                                                contentDescription = recommendation.trackName,
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                            if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .align(Alignment.Center),
+                                                    strokeWidth = 2.dp
+                                                )
+                                            }
+                                            if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                                                Icon(
+                                                    Icons.Filled.MusicNote,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .align(Alignment.Center)
+                                                )
+                                            }
+                                        }
                                         Column(
                                             modifier = Modifier.weight(1f),
                                             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -411,8 +447,6 @@ fun ProfileScreen(
                     }
                 }
             }
-            
-            Spacer(modifier = Modifier.weight(1f))
             
             Button(
                 onClick = onLogout,

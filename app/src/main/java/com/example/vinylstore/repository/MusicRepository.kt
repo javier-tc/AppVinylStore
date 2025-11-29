@@ -8,15 +8,20 @@ class MusicRepository(
     private val musicApi: MusicApi,
     private val apiKey: String
 ) {
-    suspend fun getTopTracks(limit: Int = 5): Result<List<MusicRecommendation>> {
+    suspend fun getTopTracks(limit: Int = 5, page: Int = 1): Result<List<MusicRecommendation>> {
         return try {
             val response = musicApi.getTopTracks(
                 apiKey = apiKey,
-                limit = limit
+                limit = limit,
+                page = page
             )
             if (response.isSuccessful && response.body() != null) {
                 val tracks = response.body()!!.tracks?.track ?: emptyList()
-                val recommendations = tracks.map { it.toMusicRecommendation() }
+                // Filtrar tracks que no tengan nombre o artista válido
+                val validTracks = tracks.filter { 
+                    it.name.isNotBlank() && it.artist?.name?.isNotBlank() == true
+                }
+                val recommendations = validTracks.map { it.toMusicRecommendation() }
                 Result.success(recommendations)
             } else {
                 val errorBody = response.errorBody()?.string() ?: "Sin detalles"
@@ -28,12 +33,13 @@ class MusicRepository(
         }
     }
     
-    suspend fun getTracksByTag(tag: String, limit: Int = 5): Result<List<MusicRecommendation>> {
+    suspend fun getTracksByTag(tag: String, limit: Int = 5, page: Int = 1): Result<List<MusicRecommendation>> {
         return try {
             val response = musicApi.getTracksByTag(
                 tag = tag,
                 apiKey = apiKey,
-                limit = limit
+                limit = limit,
+                page = page
             )
             if (response.isSuccessful && response.body() != null) {
                 val tracks = response.body()!!.tracks?.track ?: emptyList()
@@ -50,17 +56,21 @@ class MusicRepository(
     }
     
     private fun TrackDto.toMusicRecommendation(): MusicRecommendation {
-        // Buscar la imagen de tamaño medium o large
-        val imageUrl = images?.find { it.size == "medium" || it.size == "large" }?.url
-            ?: images?.firstOrNull()?.url
-            ?: "https://via.placeholder.com/300"
+        // Intentar obtener la imagen más grande disponible
+        // Prioridad: extralarge > large > medium > small > cualquiera
+        val validImages = images?.filter { it.url.isNotBlank() } ?: emptyList()
+        
+        val imageUrl = validImages.find { it.size == "extralarge" }?.url
+            ?: validImages.find { it.size == "large" }?.url
+            ?: validImages.find { it.size == "medium" }?.url
+            ?: validImages.firstOrNull()?.url
+            ?: "https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png" // Placeholder genérico de last.fm o similar
         
         return MusicRecommendation(
-            trackName = name,
-            artistName = artist.name,
+            trackName = name.ifBlank { "Sin título" },
+            artistName = artist?.name?.ifBlank { "Artista desconocido" } ?: "Artista desconocido",
             imageUrl = imageUrl,
             url = url
         )
     }
 }
-

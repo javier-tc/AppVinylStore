@@ -54,18 +54,18 @@ class TrackDeserializer : JsonDeserializer<List<TrackDto>> {
 
 data class TrackDto(
     @SerializedName("name")
-    val name: String,
+    val name: String = "",
     @SerializedName("artist")
-    val artist: ArtistInfo,
+    val artist: ArtistInfo?,
     @SerializedName("image")
     val images: List<ImageDto>?,
     @SerializedName("url")
-    val url: String?
+    val url: String? = null
 )
 
 data class ArtistInfo(
     @SerializedName("name")
-    val name: String
+    val name: String = ""
 )
 
 data class ImageDto(

@@ -12,7 +12,8 @@ interface MusicApi {
         @Query("method") method: String = "chart.gettoptracks",
         @Query("api_key") apiKey: String,
         @Query("format") format: String = "json",
-        @Query("limit") limit: Int = 5
+        @Query("limit") limit: Int = 5,
+        @Query("page") page: Int = 1
     ): Response<LastFmResponse>
     
     // Obtener tracks por tag (género)
@@ -22,7 +23,7 @@ interface MusicApi {
         @Query("tag") tag: String,
         @Query("api_key") apiKey: String,
         @Query("format") format: String = "json",
-        @Query("limit") limit: Int = 5
+        @Query("limit") limit: Int = 5,
+        @Query("page") page: Int = 1
     ): Response<LastFmResponse>
 }
-

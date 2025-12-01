@@ -75,4 +75,72 @@ Vinylstore
 - Android SDK objetivo: API 36
 - Java 11 o superior
 
-## 6. Captura del APK firmado y .jks
+## 6. Generación de APK firmado
+
+### 6.1. Configuración de firma
+
+El proyecto está configurado para generar automáticamente APKs firmados para la versión release. La configuración de firma se encuentra en:
+
+- **Archivo de configuración:** `app/build.gradle.kts`
+- **Archivo de propiedades:** `keystore.properties` (en la raíz del proyecto)
+- **Keystore:** `vinylstore-keystore.jks` (en la raíz del proyecto)
+
+### 6.2. Información del keystore
+
+- **Nombre del archivo:** `vinylstore-keystore.jks`
+- **Alias de la clave:** `vinylstore`
+- **Ubicación:** Raíz del proyecto
+
+
+### 6.3. Generar APK firmado desde Android Studio
+
+1. Abre el proyecto en Android Studio
+2. Ve a **Build > Generate Signed Bundle / APK**
+3. Selecciona **APK**
+4. Elige el keystore existente o crea uno nuevo
+5. Selecciona el build variant: **release**
+6. Haz clic en **Finish**
+
+El APK firmado se generará en: `app/release/app-release.apk`
+
+### 6.4. Configuración técnica
+
+- **Versión de la aplicación:** 1.0 (versionName)
+- **Código de versión:** 1 (versionCode)
+- **Application ID:** `com.example.vinylstore`
+- **Min SDK:** 24 (Android 7.0)
+- **Target SDK:** 36
+- **Compile SDK:** 36
+
+### 6.7. Archivos de configuración
+
+La configuración de firma está definida en `app/build.gradle.kts`:
+
+```kotlin
+signingConfigs {
+    create("release") {
+        val keystorePropertiesFile = rootProject.file("keystore.properties")
+        if (keystorePropertiesFile.exists()) {
+            val keystoreProperties = Properties().apply {
+                keystorePropertiesFile.inputStream().use { load(it) }
+            }
+            
+            storeFile = rootProject.file(keystoreProperties.getProperty("storeFile") ?: "")
+            storePassword = keystoreProperties.getProperty("storePassword") ?: ""
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: ""
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: ""
+        }
+    }
+}
+
+buildTypes {
+    release {
+        isMinifyEnabled = false
+        proguardFiles(
+            getDefaultProguardFile("proguard-android-optimize.txt"),
+            "proguard-rules.pro"
+        )
+        signingConfig = signingConfigs.getByName("release")
+    }
+}
+```

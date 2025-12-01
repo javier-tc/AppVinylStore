@@ -16,3 +16,5 @@ local.properties
 ANDROID_STUDIO_COVERAGE.md
 COVERAGE_GUIDE.md
 UI_TESTS_GUIDE.md
+
+#archivos de keystore y firma

@@ -1,0 +1,188 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SessionManager</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.data.remote</a>
+</div>
+
+<h1>Coverage Summary for Class: SessionManager (com.example.vinylstore.data.remote)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SessionManager</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (15/15)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">SessionManager$Companion</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (15/15)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.data.remote
+&nbsp;
+&nbsp;import android.content.Context
+&nbsp;import android.content.SharedPreferences
+&nbsp;
+<b class="fc">&nbsp;class SessionManager(context: Context) {</b>
+<b class="fc">&nbsp;    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)</b>
+&nbsp;    
+&nbsp;    companion object {
+&nbsp;        private const val PREFS_NAME = &quot;VinylStorePrefs&quot;
+&nbsp;        private const val KEY_TOKEN = &quot;auth_token&quot;
+&nbsp;        private const val KEY_USER_ID = &quot;user_id&quot;
+&nbsp;        private const val KEY_USER_EMAIL = &quot;user_email&quot;
+&nbsp;        private const val KEY_USER_ROLE = &quot;user_role&quot;
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun saveToken(token: String) {
+<b class="fc">&nbsp;        prefs.edit().putString(KEY_TOKEN, token).apply()</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getToken(): String? {
+<b class="fc">&nbsp;        return prefs.getString(KEY_TOKEN, null)</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun saveUserInfo(userId: Int, email: String, role: String) {
+<b class="fc">&nbsp;        prefs.edit().apply {</b>
+<b class="fc">&nbsp;            putInt(KEY_USER_ID, userId)</b>
+<b class="fc">&nbsp;            putString(KEY_USER_EMAIL, email)</b>
+<b class="fc">&nbsp;            putString(KEY_USER_ROLE, role)</b>
+<b class="fc">&nbsp;            apply()</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getUserId(): Int {
+<b class="fc">&nbsp;        return prefs.getInt(KEY_USER_ID, 0)</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getUserEmail(): String? {
+<b class="fc">&nbsp;        return prefs.getString(KEY_USER_EMAIL, null)</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getUserRole(): String? {
+<b class="fc">&nbsp;        return prefs.getString(KEY_USER_ROLE, null)</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun clearSession() {
+<b class="fc">&nbsp;        prefs.edit().clear().apply()</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun isLoggedIn(): Boolean {
+<b class="fc">&nbsp;        return getToken() != null</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

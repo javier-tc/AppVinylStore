@@ -1,0 +1,299 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AuthRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: AuthRepository (com.example.vinylstore.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AuthRepository</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    53,3%
+  </span>
+  <span class="absValue">
+    (16/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91,7%
+  </span>
+  <span class="absValue">
+    (55/60)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">AuthRepository$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">AuthRepository$getProfile$1</td>
+  </tr>
+  <tr>
+    <td class="name">AuthRepository$loadUserProfile$1</td>
+  </tr>
+  <tr>
+    <td class="name">AuthRepository$login$1</td>
+  </tr>
+  <tr>
+    <td class="name">AuthRepository$logout$1</td>
+  </tr>
+  <tr>
+    <td class="name">AuthRepository$register$1</td>
+  </tr>
+  <tr>
+    <td class="name">AuthRepository$updateProfile$1</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    87,5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    53,3%
+  </span>
+  <span class="absValue">
+    (16/30)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90,2%
+  </span>
+  <span class="absValue">
+    (55/61)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.repository
+&nbsp;
+&nbsp;import com.example.vinylstore.data.model.User
+&nbsp;import com.example.vinylstore.data.remote.SessionManager
+&nbsp;import com.example.vinylstore.data.remote.api.AuthApi
+&nbsp;import com.example.vinylstore.data.remote.dto.*
+&nbsp;import kotlinx.coroutines.flow.MutableStateFlow
+&nbsp;import kotlinx.coroutines.flow.StateFlow
+&nbsp;import kotlinx.coroutines.flow.asStateFlow
+&nbsp;import kotlinx.coroutines.CoroutineScope
+&nbsp;import kotlinx.coroutines.Dispatchers
+&nbsp;import kotlinx.coroutines.launch
+&nbsp;
+&nbsp;class AuthRepository(
+<b class="fc">&nbsp;    private val authApi: AuthApi,</b>
+<b class="fc">&nbsp;    private val sessionManager: SessionManager,</b>
+<b class="fc">&nbsp;    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)</b>
+&nbsp;) {
+<b class="fc">&nbsp;    private val _currentUser = MutableStateFlow&lt;User?&gt;(null)</b>
+<b class="fc">&nbsp;    val currentUser: StateFlow&lt;User?&gt; = _currentUser.asStateFlow()</b>
+&nbsp;    
+<b class="fc">&nbsp;    init {</b>
+&nbsp;        //cargar usuario desde sesión si existe
+<b class="pc">&nbsp;        if (sessionManager.isLoggedIn()) {</b>
+<b class="nc">&nbsp;            val userId = sessionManager.getUserId()</b>
+<b class="nc">&nbsp;            if (userId &gt; 0) {</b>
+<b class="nc">&nbsp;                scope.launch {</b>
+<b class="nc">&nbsp;                    loadUserProfile(userId)</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+<b class="fc">&nbsp;    }</b>
+&nbsp;    
+&nbsp;    suspend fun login(email: String, password: String): Result&lt;AuthResponse&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val request = LoginRequest(email, password)</b>
+<b class="fc">&nbsp;            val response = authApi.login(request)</b>
+&nbsp;            
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                val authResponse = response.body()!!</b>
+<b class="fc">&nbsp;                sessionManager.saveToken(authResponse.token)</b>
+<b class="fc">&nbsp;                sessionManager.saveUserInfo(authResponse.userId, authResponse.email, authResponse.role)</b>
+<b class="fc">&nbsp;                loadUserProfile(authResponse.userId)</b>
+<b class="fc">&nbsp;                Result.success(authResponse)</b>
+&nbsp;            } else {
+<b class="pc">&nbsp;                val errorBody = response.errorBody()?.string() ?: &quot;Sin detalles&quot;</b>
+<b class="fc">&nbsp;                val errorMessage = &quot;Error al iniciar sesión: ${response.code()} - ${response.message()}. Detalles: $errorBody&quot;</b>
+<b class="fc">&nbsp;                Result.failure(Exception(errorMessage))</b>
+&nbsp;            }
+&nbsp;        } catch (e: java.net.SocketTimeoutException) {
+<b class="fc">&nbsp;            Result.failure(Exception(&quot;Timeout: El servidor no respondió a tiempo. Verifica tu conexión.&quot;))</b>
+&nbsp;        } catch (e: java.net.UnknownHostException) {
+<b class="fc">&nbsp;            Result.failure(Exception(&quot;Error de conexión: No se pudo conectar al servidor. Verifica tu conexión a internet.&quot;))</b>
+&nbsp;        } catch (e: Exception) {
+<b class="pc">&nbsp;            Result.failure(Exception(&quot;Error al iniciar sesión: ${e.message ?: e.javaClass.simpleName}&quot;))</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun register(email: String, password: String, firstName: String, lastName: String): Result&lt;AuthResponse&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val request = RegisterRequest(email, password, firstName, lastName)</b>
+<b class="fc">&nbsp;            val response = authApi.register(request)</b>
+&nbsp;            
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                val authResponse = response.body()!!</b>
+<b class="fc">&nbsp;                sessionManager.saveToken(authResponse.token)</b>
+<b class="fc">&nbsp;                sessionManager.saveUserInfo(authResponse.userId, authResponse.email, authResponse.role)</b>
+<b class="fc">&nbsp;                loadUserProfile(authResponse.userId)</b>
+<b class="fc">&nbsp;                Result.success(authResponse)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al registrar usuario: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun logout(): Result&lt;Unit&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val response = authApi.logout()</b>
+<b class="fc">&nbsp;            sessionManager.clearSession()</b>
+<b class="fc">&nbsp;            _currentUser.value = null</b>
+<b class="fc">&nbsp;            if (response.isSuccessful) {</b>
+<b class="fc">&nbsp;                Result.success(Unit)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al cerrar sesión&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="nc">&nbsp;            sessionManager.clearSession()</b>
+<b class="nc">&nbsp;            _currentUser.value = null</b>
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun getProfile(userId: Int): Result&lt;UserProfileDto&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val response = authApi.getProfile(userId)</b>
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                Result.success(response.body()!!)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al obtener perfil: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun updateProfile(userId: Int, firstName: String?, lastName: String?): Result&lt;UserProfileDto&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val request = UpdateProfileRequest(firstName, lastName)</b>
+<b class="fc">&nbsp;            val response = authApi.updateProfile(userId, request)</b>
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                val profile = response.body()!!</b>
+<b class="fc">&nbsp;                _currentUser.value = profile.toUser()</b>
+<b class="fc">&nbsp;                Result.success(profile)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al actualizar perfil: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    private suspend fun loadUserProfile(userId: Int) {
+<b class="pc">&nbsp;        getProfile(userId).onSuccess { profile -&gt;</b>
+<b class="fc">&nbsp;            _currentUser.value = profile.toUser()</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

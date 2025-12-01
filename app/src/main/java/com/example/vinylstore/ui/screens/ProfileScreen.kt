@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
+import com.example.vinylstore.data.remote.dto.MusicRecommendation
 import com.example.vinylstore.viewmodel.MusicViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
@@ -61,14 +62,18 @@ fun ProfileScreen(
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     
-    // Estados del MusicViewModel
+    //estados del MusicViewModel
     val recommendations by musicViewModel.recommendations.collectAsState()
     val isLoadingMusic by musicViewModel.isLoading.collectAsState()
     val musicError by musicViewModel.error.collectAsState()
     
-    // Cargar recomendaciones al montar el componente
+    //cargar recomendaciones al montar el componente de forma segura
     LaunchedEffect(Unit) {
-        musicViewModel.loadTopTracks()
+        try {
+            musicViewModel.loadTopTracks()
+        } catch (e: Exception) {
+            //manejar error silenciosamente para no bloquear la UI
+        }
     }
     
     val permissionsState = rememberMultiplePermissionsState(
@@ -303,7 +308,7 @@ fun ProfileScreen(
                 }
             }
             
-            // Sección de Recomendaciones Musicales
+            //sección de recomendaciones musicales
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)

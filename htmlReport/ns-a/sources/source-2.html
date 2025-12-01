@@ -1,0 +1,243 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CartItemWithProduct</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.viewmodel</a>
+</div>
+
+<h1>Coverage Summary for Class: CartItemWithProduct (com.example.vinylstore.viewmodel)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CartItemWithProduct</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.viewmodel
+&nbsp;
+&nbsp;import androidx.lifecycle.ViewModel
+&nbsp;import androidx.lifecycle.viewModelScope
+&nbsp;import com.example.vinylstore.data.model.CartItem
+&nbsp;import com.example.vinylstore.data.model.Product
+&nbsp;import com.example.vinylstore.repository.CartRepository
+&nbsp;import com.example.vinylstore.repository.OrderRepository
+&nbsp;import com.example.vinylstore.repository.ProductRepository
+&nbsp;import kotlinx.coroutines.flow.*
+&nbsp;import kotlinx.coroutines.launch
+&nbsp;import kotlinx.coroutines.flow.first
+&nbsp;
+&nbsp;class CartViewModel(
+&nbsp;    private val cartRepository: CartRepository,
+&nbsp;    private val productRepository: ProductRepository,
+&nbsp;    private val orderRepository: OrderRepository
+&nbsp;) : ViewModel() {
+&nbsp;    
+&nbsp;    fun getCartItems(userId: Long): Flow&lt;List&lt;CartItemWithProduct&gt;&gt; {
+&nbsp;        return cartRepository.cartItems.flatMapLatest { cartItems -&gt;
+&nbsp;            val filteredItems = cartItems.filter { it.userId == userId }
+&nbsp;            if (filteredItems.isEmpty()) {
+&nbsp;                flowOf(emptyList())
+&nbsp;            } else {
+&nbsp;                flow {
+&nbsp;                    val result = mutableListOf&lt;CartItemWithProduct&gt;()
+&nbsp;                    filteredItems.forEach { cartItem -&gt;
+&nbsp;                        val productResult = productRepository.getProductById(cartItem.productId)
+&nbsp;                        val product = productResult.getOrNull() ?: 
+&nbsp;                            Product(0, &quot;&quot;, &quot;&quot;, 0.0, &quot;&quot;, &quot;&quot;, &quot;&quot;)
+&nbsp;                        result.add(CartItemWithProduct(cartItem, product))
+&nbsp;                    }
+&nbsp;                    emit(result)
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getCartItemCount(userId: Long): Flow&lt;Int&gt; {
+&nbsp;        return cartRepository.getCartItemCount(userId.toInt())
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun loadCart(userId: Long) {
+&nbsp;        viewModelScope.launch {
+&nbsp;            cartRepository.getCart(userId.toInt())
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun addToCart(productId: Int, userId: Long, quantity: Int = 1) {
+&nbsp;        viewModelScope.launch {
+&nbsp;            val existingItems = cartRepository.cartItems.first()
+&nbsp;            val existingItem = existingItems.find { 
+&nbsp;                it.productId == productId &amp;&amp; it.userId == userId 
+&nbsp;            }
+&nbsp;            
+&nbsp;            if (existingItem != null) {
+&nbsp;                val newQuantity = existingItem.cantidad + quantity
+&nbsp;                cartRepository.updateItem(
+&nbsp;                    userId.toInt(),
+&nbsp;                    existingItem.id.toInt(),
+&nbsp;                    newQuantity
+&nbsp;                )
+&nbsp;            } else {
+&nbsp;                cartRepository.addItem(userId.toInt(), productId, quantity)
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun removeFromCart(cartItem: CartItem) {
+&nbsp;        viewModelScope.launch {
+&nbsp;            cartRepository.deleteItem(cartItem.userId.toInt(), cartItem.id.toInt())
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun updateCartItemQuantity(cartItem: CartItem, newQuantity: Int) {
+&nbsp;        viewModelScope.launch {
+&nbsp;            if (newQuantity &gt; 0) {
+&nbsp;                cartRepository.updateItem(
+&nbsp;                    cartItem.userId.toInt(),
+&nbsp;                    cartItem.id.toInt(),
+&nbsp;                    newQuantity
+&nbsp;                )
+&nbsp;            } else {
+&nbsp;                cartRepository.deleteItem(cartItem.userId.toInt(), cartItem.id.toInt())
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun clearCart(userId: Long) {
+&nbsp;        viewModelScope.launch {
+&nbsp;            cartRepository.clearCart(userId.toInt())
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun getTotalPrice(userId: Long): Double {
+&nbsp;        val result = cartRepository.getCartTotal(userId.toInt())
+&nbsp;        return result.getOrNull()?.total ?: 0.0
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun confirmOrder(cartItems: List&lt;CartItem&gt;, userId: Long): Result&lt;Unit&gt; {
+&nbsp;        return try {
+&nbsp;            //crear una orden por cada item del carrito
+&nbsp;            cartItems.forEach { cartItem -&gt;
+&nbsp;                val productResult = productRepository.getProductById(cartItem.productId)
+&nbsp;                val product = productResult.getOrNull()
+&nbsp;                
+&nbsp;                if (product != null) {
+&nbsp;                    val orderResult = orderRepository.createOrder(
+&nbsp;                        productId = cartItem.productId,
+&nbsp;                        cantidad = cartItem.cantidad,
+&nbsp;                        precioUnitario = product.precio
+&nbsp;                    )
+&nbsp;                    
+&nbsp;                    if (orderResult.isFailure) {
+&nbsp;                        return Result.failure(
+&nbsp;                            Exception(&quot;Error al crear pedido para ${product.titulo}: ${orderResult.exceptionOrNull()?.message}&quot;)
+&nbsp;                        )
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;            
+&nbsp;            //limpiar el carrito solo si todas las órdenes se crearon exitosamente
+&nbsp;            val clearResult = cartRepository.clearCart(userId.toInt())
+&nbsp;            if (clearResult.isSuccess) {
+&nbsp;                Result.success(Unit)
+&nbsp;            } else {
+&nbsp;                Result.failure(Exception(&quot;Pedidos creados pero error al limpiar carrito&quot;))
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+&nbsp;            Result.failure(Exception(&quot;Error al confirmar pedido: ${e.message}&quot;))
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+<b class="fc">&nbsp;data class CartItemWithProduct(</b>
+<b class="fc">&nbsp;    val cartItem: CartItem,</b>
+<b class="fc">&nbsp;    val product: Product</b>
+&nbsp;)
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

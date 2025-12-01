@@ -21,6 +21,45 @@ Vinylstore
 
 ## 4. Endpoints utilizados (API externa y microservicio)
 
+### 4.1. Microservicio Backend
+**URL Base:** `http://201.188.130.203:8080/`
+
+#### Autenticación (`/api/auth`)
+- `POST /api/auth/register` - Registro de usuarios
+- `POST /api/auth/login` - Inicio de sesión
+- `POST /api/auth/logout` - Cerrar sesión
+- `GET /api/auth/profile/{userId}` - Obtener perfil de usuario
+- `PUT /api/auth/profile/{userId}` - Actualizar perfil de usuario
+
+#### Productos (`/api/products`)
+- `GET /api/products` - Obtener todos los productos (con filtro opcional por género)
+- `GET /api/products/{id}` - Obtener producto por ID
+- `POST /api/products` - Crear nuevo producto (admin)
+- `PUT /api/products/{id}` - Actualizar producto (admin)
+- `DELETE /api/products/{id}` - Eliminar producto (admin)
+- `PUT /api/products/{id}/stock` - Actualizar stock de producto
+
+#### Carrito (`/api/cart`)
+- `GET /api/cart/{userId}` - Obtener carrito del usuario
+- `POST /api/cart/{userId}/items` - Agregar item al carrito
+- `PUT /api/cart/{userId}/items/{itemId}` - Actualizar item del carrito
+- `DELETE /api/cart/{userId}/items/{itemId}` - Eliminar item del carrito
+- `DELETE /api/cart/{userId}` - Vaciar carrito
+- `GET /api/cart/{userId}/total` - Obtener total del carrito
+
+#### Pedidos (`/api/orders`)
+- `GET /api/orders/my-orders` - Obtener pedidos del usuario actual
+- `GET /api/orders` - Obtener todos los pedidos (admin)
+- `GET /api/orders/estado/{estado}` - Obtener pedidos por estado
+- `POST /api/orders` - Crear nuevo pedido
+
+### 4.2. API Externa - Last.fm
+**URL Base:** `https://ws.audioscrobbler.com/`
+
+#### Música (`/2.0/`)
+- `GET /2.0/?method=chart.gettoptracks` - Obtener tracks más populares
+- `GET /2.0/?method=tag.gettoptracks` - Obtener tracks por género/tag
+
 
 ## 5. Pasos para ejecutar
 1. Asegúrate de tener Android Studio instalado (versión recomendada: última versión estable)

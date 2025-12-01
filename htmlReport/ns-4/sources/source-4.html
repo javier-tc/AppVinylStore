@@ -1,0 +1,110 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AuthApi</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.data.remote.api</a>
+</div>
+
+<h1>Coverage Summary for Class: AuthApi (com.example.vinylstore.data.remote.api)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">AuthApi$Subclass1</td>
+  </tr>
+  <tr>
+    <td class="name">AuthApi$Subclass1$auxiliary$ChxytyEX</td>
+  </tr>
+  <tr>
+    <td class="name">AuthApi$Subclass1$auxiliary$kWrl3oFp</td>
+  </tr>
+  <tr>
+    <td class="name">AuthApi$Subclass1$auxiliary$rE5uKSRV</td>
+  </tr>
+  <tr>
+    <td class="name">AuthApi$Subclass1$auxiliary$zr1qHw5q</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.data.remote.api
+&nbsp;
+&nbsp;import com.example.vinylstore.data.remote.dto.*
+&nbsp;import retrofit2.Response
+&nbsp;import retrofit2.http.*
+&nbsp;
+&nbsp;interface AuthApi {
+&nbsp;    @POST(&quot;api/auth/register&quot;)
+&nbsp;    suspend fun register(@Body request: RegisterRequest): Response&lt;AuthResponse&gt;
+&nbsp;    
+&nbsp;    @POST(&quot;api/auth/login&quot;)
+&nbsp;    suspend fun login(@Body request: LoginRequest): Response&lt;AuthResponse&gt;
+&nbsp;    
+&nbsp;    @POST(&quot;api/auth/logout&quot;)
+&nbsp;    suspend fun logout(): Response&lt;Unit&gt;
+&nbsp;    
+&nbsp;    @GET(&quot;api/auth/profile/{userId}&quot;)
+&nbsp;    suspend fun getProfile(@Path(&quot;userId&quot;) userId: Int): Response&lt;UserProfileDto&gt;
+&nbsp;    
+&nbsp;    @PUT(&quot;api/auth/profile/{userId}&quot;)
+&nbsp;    suspend fun updateProfile(
+&nbsp;        @Path(&quot;userId&quot;) userId: Int,
+&nbsp;        @Body request: UpdateProfileRequest
+&nbsp;    ): Response&lt;UserProfileDto&gt;
+&nbsp;    
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

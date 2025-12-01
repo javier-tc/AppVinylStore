@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.data.model.Product
+import com.example.vinylstore.ui.util.canDecrementQuantity
+import com.example.vinylstore.ui.util.canIncrementQuantity
 import com.example.vinylstore.viewmodel.CartViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -231,7 +233,9 @@ fun ProductDetailScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                     
-                    IconButton(onClick = { if (quantity > 1) quantity-- }) {
+                    IconButton(onClick = { 
+                        if (canDecrementQuantity(quantity)) quantity-- 
+                    }) {
                         Text("-", style = MaterialTheme.typography.headlineMedium)
                     }
                     
@@ -255,7 +259,9 @@ fun ProductDetailScreen(
                         }
                     }
                     
-                    IconButton(onClick = { if (quantity < product.stock) quantity++ }) {
+                    IconButton(onClick = { 
+                        if (canIncrementQuantity(quantity, product)) quantity++ 
+                    }) {
                         Text("+", style = MaterialTheme.typography.headlineMedium)
                     }
                 }

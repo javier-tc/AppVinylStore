@@ -1,0 +1,272 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CartRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: CartRepository (com.example.vinylstore.repository)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CartRepository</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66,7%
+  </span>
+  <span class="absValue">
+    (16/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (46/46)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CartRepository$addItem$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$clearCart$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$deleteItem$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$getCart$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$getCartItemCount$$inlined$map$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$getCartItemCount$$inlined$map$1$2</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$getCartItemCount$$inlined$map$1$2$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$getCartTotal$1</td>
+  </tr>
+  <tr>
+    <td class="name">CartRepository$updateItem$1</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66,7%
+  </span>
+  <span class="absValue">
+    (16/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (46/46)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.repository
+&nbsp;
+&nbsp;import com.example.vinylstore.data.model.CartItem
+&nbsp;import com.example.vinylstore.data.remote.api.CartApi
+&nbsp;import com.example.vinylstore.data.remote.dto.AddCartItemRequest
+&nbsp;import com.example.vinylstore.data.remote.dto.CartItemDto
+&nbsp;import com.example.vinylstore.data.remote.dto.CartTotalResponse
+&nbsp;import com.example.vinylstore.data.remote.dto.UpdateCartItemRequest
+&nbsp;import kotlinx.coroutines.flow.Flow
+&nbsp;import kotlinx.coroutines.flow.MutableStateFlow
+&nbsp;import kotlinx.coroutines.flow.asStateFlow
+&nbsp;import kotlinx.coroutines.flow.map
+&nbsp;
+<b class="fc">&nbsp;class CartRepository(</b>
+<b class="fc">&nbsp;    private val cartApi: CartApi</b>
+&nbsp;) {
+<b class="fc">&nbsp;    private val _cartItems = MutableStateFlow&lt;List&lt;CartItem&gt;&gt;(emptyList())</b>
+<b class="fc">&nbsp;    val cartItems: Flow&lt;List&lt;CartItem&gt;&gt; = _cartItems.asStateFlow()</b>
+&nbsp;    
+&nbsp;    suspend fun getCart(userId: Int): Result&lt;List&lt;CartItem&gt;&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val response = cartApi.getCart(userId)</b>
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                val items = response.body()!!.map { it.toCartItem() }</b>
+<b class="fc">&nbsp;                _cartItems.value = items</b>
+<b class="fc">&nbsp;                Result.success(items)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al obtener carrito: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun addItem(userId: Int, productId: Int, quantity: Int): Result&lt;CartItem&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val request = AddCartItemRequest(productId, quantity)</b>
+<b class="fc">&nbsp;            val response = cartApi.addItem(userId, request)</b>
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                val item = response.body()!!.toCartItem()</b>
+<b class="fc">&nbsp;                _cartItems.value = _cartItems.value + item</b>
+<b class="fc">&nbsp;                Result.success(item)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al agregar item: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun updateItem(userId: Int, itemId: Int, quantity: Int): Result&lt;CartItem&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val request = UpdateCartItemRequest(quantity)</b>
+<b class="fc">&nbsp;            val response = cartApi.updateItem(userId, itemId, request)</b>
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                val item = response.body()!!.toCartItem()</b>
+<b class="pc">&nbsp;                _cartItems.value = _cartItems.value.map { if (it.id.toInt() == itemId) item else it }</b>
+<b class="fc">&nbsp;                Result.success(item)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al actualizar item: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun deleteItem(userId: Int, itemId: Int): Result&lt;Unit&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val response = cartApi.deleteItem(userId, itemId)</b>
+<b class="fc">&nbsp;            if (response.isSuccessful) {</b>
+<b class="pc">&nbsp;                _cartItems.value = _cartItems.value.filter { item -&gt; item.id.toInt() != itemId }</b>
+<b class="fc">&nbsp;                Result.success(Unit)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al eliminar item: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun clearCart(userId: Int): Result&lt;Unit&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val response = cartApi.clearCart(userId)</b>
+<b class="fc">&nbsp;            if (response.isSuccessful) {</b>
+<b class="fc">&nbsp;                _cartItems.value = emptyList()</b>
+<b class="fc">&nbsp;                Result.success(Unit)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al vaciar carrito: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    suspend fun getCartTotal(userId: Int): Result&lt;CartTotalResponse&gt; {
+&nbsp;        return try {
+<b class="fc">&nbsp;            val response = cartApi.getCartTotal(userId)</b>
+<b class="pc">&nbsp;            if (response.isSuccessful &amp;&amp; response.body() != null) {</b>
+<b class="fc">&nbsp;                Result.success(response.body()!!)</b>
+&nbsp;            } else {
+<b class="fc">&nbsp;                Result.failure(Exception(&quot;Error al obtener total: ${response.message()}&quot;))</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="fc">&nbsp;            Result.failure(e)</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getCartItemCount(userId: Int): Flow&lt;Int&gt; {
+<b class="fc">&nbsp;        return _cartItems.map { items -&gt;</b>
+<b class="fc">&nbsp;            items.count { it.userId == userId.toLong() }</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

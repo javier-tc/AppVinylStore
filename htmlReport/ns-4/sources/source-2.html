@@ -1,0 +1,160 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ProductApi</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.data.remote.api</a>
+</div>
+
+<h1>Coverage Summary for Class: ProductApi (com.example.vinylstore.data.remote.api)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+  <tr>
+    <td class="name">ProductApi$DefaultImpls</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">ProductApi$Subclass5</td>
+  </tr>
+  <tr>
+    <td class="name">ProductApi$Subclass5$auxiliary$bJEysz6G</td>
+  </tr>
+  <tr>
+    <td class="name">ProductApi$Subclass5$auxiliary$n6D5lTsa</td>
+  </tr>
+  <tr>
+    <td class="name">ProductApi$Subclass5$auxiliary$YCbOAprI</td>
+  </tr>
+  <tr>
+    <td class="name">ProductApi$Subclass5$auxiliary$Z20RTf0O</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.data.remote.api
+&nbsp;
+&nbsp;import com.example.vinylstore.data.remote.dto.ProductDto
+&nbsp;import com.example.vinylstore.data.remote.dto.CreateProductRequest
+&nbsp;import com.example.vinylstore.data.remote.dto.UpdateStockRequest
+&nbsp;import retrofit2.Response
+&nbsp;import retrofit2.http.*
+&nbsp;
+&nbsp;interface ProductApi {
+&nbsp;    @GET(&quot;api/products&quot;)
+<b class="nc">&nbsp;    suspend fun getProducts(@Query(&quot;genero&quot;) genero: String? = null): Response&lt;List&lt;ProductDto&gt;&gt;</b>
+&nbsp;    
+&nbsp;    @GET(&quot;api/products/{id}&quot;)
+&nbsp;    suspend fun getProductById(@Path(&quot;id&quot;) id: Int): Response&lt;ProductDto&gt;
+&nbsp;    
+&nbsp;    @POST(&quot;api/products&quot;)
+&nbsp;    suspend fun createProduct(@Body request: CreateProductRequest): Response&lt;ProductDto&gt;
+&nbsp;    
+&nbsp;    @PUT(&quot;api/products/{id}&quot;)
+&nbsp;    suspend fun updateProduct(
+&nbsp;        @Path(&quot;id&quot;) id: Int,
+&nbsp;        @Body request: CreateProductRequest
+&nbsp;    ): Response&lt;ProductDto&gt;
+&nbsp;    
+&nbsp;    @DELETE(&quot;api/products/{id}&quot;)
+&nbsp;    suspend fun deleteProduct(@Path(&quot;id&quot;) id: Int): Response&lt;Unit&gt;
+&nbsp;    
+&nbsp;    @PUT(&quot;api/products/{id}/stock&quot;)
+&nbsp;    suspend fun updateStock(
+&nbsp;        @Path(&quot;id&quot;) id: Int,
+&nbsp;        @Body request: UpdateStockRequest
+&nbsp;    ): Response&lt;ProductDto&gt;
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

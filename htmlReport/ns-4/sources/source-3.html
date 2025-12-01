@@ -1,0 +1,119 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CartApi</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.data.remote.api</a>
+</div>
+
+<h1>Coverage Summary for Class: CartApi (com.example.vinylstore.data.remote.api)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">CartApi$Subclass2</td>
+  </tr>
+  <tr>
+    <td class="name">CartApi$Subclass2$auxiliary$1oH64EmW</td>
+  </tr>
+  <tr>
+    <td class="name">CartApi$Subclass2$auxiliary$DYvoXnCb</td>
+  </tr>
+  <tr>
+    <td class="name">CartApi$Subclass2$auxiliary$HVQLSfos</td>
+  </tr>
+  <tr>
+    <td class="name">CartApi$Subclass2$auxiliary$vU9CS4An</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.data.remote.api
+&nbsp;
+&nbsp;import com.example.vinylstore.data.remote.dto.*
+&nbsp;import retrofit2.Response
+&nbsp;import retrofit2.http.*
+&nbsp;
+&nbsp;interface CartApi {
+&nbsp;    @GET(&quot;api/cart/{userId}&quot;)
+&nbsp;    suspend fun getCart(@Path(&quot;userId&quot;) userId: Int): Response&lt;List&lt;CartItemDto&gt;&gt;
+&nbsp;    
+&nbsp;    @POST(&quot;api/cart/{userId}/items&quot;)
+&nbsp;    suspend fun addItem(
+&nbsp;        @Path(&quot;userId&quot;) userId: Int,
+&nbsp;        @Body request: AddCartItemRequest
+&nbsp;    ): Response&lt;CartItemDto&gt;
+&nbsp;    
+&nbsp;    @PUT(&quot;api/cart/{userId}/items/{itemId}&quot;)
+&nbsp;    suspend fun updateItem(
+&nbsp;        @Path(&quot;userId&quot;) userId: Int,
+&nbsp;        @Path(&quot;itemId&quot;) itemId: Int,
+&nbsp;        @Body request: UpdateCartItemRequest
+&nbsp;    ): Response&lt;CartItemDto&gt;
+&nbsp;    
+&nbsp;    @DELETE(&quot;api/cart/{userId}/items/{itemId}&quot;)
+&nbsp;    suspend fun deleteItem(
+&nbsp;        @Path(&quot;userId&quot;) userId: Int,
+&nbsp;        @Path(&quot;itemId&quot;) itemId: Int
+&nbsp;    ): Response&lt;Unit&gt;
+&nbsp;    
+&nbsp;    @DELETE(&quot;api/cart/{userId}&quot;)
+&nbsp;    suspend fun clearCart(@Path(&quot;userId&quot;) userId: Int): Response&lt;Unit&gt;
+&nbsp;    
+&nbsp;    @GET(&quot;api/cart/{userId}/total&quot;)
+&nbsp;    suspend fun getCartTotal(@Path(&quot;userId&quot;) userId: Int): Response&lt;CartTotalResponse&gt;
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

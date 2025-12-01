@@ -5,28 +5,36 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.data.model.Product
+import com.example.vinylstore.data.remote.dto.MusicRecommendation
+import com.example.vinylstore.ui.util.extractCategories
+import com.example.vinylstore.ui.util.filterProductsByCategory
 import com.example.vinylstore.viewmodel.CartViewModel
+import com.example.vinylstore.viewmodel.MusicViewModel
 import com.example.vinylstore.viewmodel.ProductViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -36,6 +44,7 @@ import kotlinx.coroutines.launch
 fun ProductsScreen(
     viewModel: ProductViewModel,
     cartViewModel: CartViewModel,
+    musicViewModel: MusicViewModel,
     currentUserId: Long,
     onNavigateToCart: () -> Unit,
     onNavigateToProfile: () -> Unit,
@@ -46,18 +55,28 @@ fun ProductsScreen(
     var addedProductId by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
     
+    //estados de recomendaciones musicales
+    val recommendations by musicViewModel.recommendations.collectAsState()
+    val isLoadingMusic by musicViewModel.isLoading.collectAsState()
+    val musicError by musicViewModel.error.collectAsState()
+    
+    //cargar recomendaciones al montar de forma segura
+    LaunchedEffect(Unit) {
+        try {
+            musicViewModel.loadTopTracks()
+        } catch (e: Exception) {
+            //manejar error silenciosamente para no bloquear la UI
+        }
+    }
+    
     var selectedCategory by remember { mutableStateOf<String?>(null) }
     
     val categories = remember(products) {
-        products.map { it.genero }.distinct().sorted()
+        extractCategories(products)
     }
     
     val filteredProducts = remember(products, selectedCategory) {
-        if (selectedCategory == null) {
-            products
-        } else {
-            products.filter { it.genero == selectedCategory }
-        }
+        filterProductsByCategory(products, selectedCategory)
     }
     
     Scaffold(
@@ -92,6 +111,157 @@ fun ProductsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            //sección de recomendaciones musicales al inicio
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Filled.MusicNote,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "Recomendaciones para ti",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            IconButton(onClick = { musicViewModel.loadTopTracks() }) {
+                                Icon(Icons.Filled.Refresh, contentDescription = "Actualizar")
+                            }
+                        }
+                        
+                        if (isLoadingMusic) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        } else if (musicError != null) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                )
+                            ) {
+                                Text(
+                                    text = "Error: $musicError",
+                                    modifier = Modifier.padding(12.dp),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        } else if (recommendations.isEmpty()) {
+                            Text(
+                                text = "No hay recomendaciones disponibles",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        } else {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(recommendations) { recommendation ->
+                                    Card(
+                                        modifier = Modifier.width(200.dp),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(60.dp)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            ) {
+                                                val painter = rememberAsyncImagePainter(
+                                                    model = recommendation.imageUrl
+                                                )
+                                                Image(
+                                                    painter = painter,
+                                                    contentDescription = recommendation.trackName,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                                if (painter.state is coil.compose.AsyncImagePainter.State.Loading) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier
+                                                            .size(24.dp)
+                                                            .align(Alignment.Center),
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                }
+                                                if (painter.state is coil.compose.AsyncImagePainter.State.Error) {
+                                                    Icon(
+                                                        Icons.Filled.MusicNote,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                        modifier = Modifier
+                                                            .size(24.dp)
+                                                            .align(Alignment.Center)
+                                                    )
+                                                }
+                                            }
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Text(
+                                                    text = recommendation.trackName,
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Text(
+                                                    text = recommendation.artistName,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             item {
                 Spacer(modifier = Modifier.height(8.dp))
             }

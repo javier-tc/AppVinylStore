@@ -81,10 +81,23 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     var editingProduct by remember { mutableStateOf<Product?>(null) }
     
+    //inicializar startDestination de forma segura
+    val startDestination = remember { "login" }
+    
     LaunchedEffect(Unit) {
-        authViewModel.currentUser.collect { user ->
-            previousUser = currentUser
-            currentUser = user
+        try {
+            authViewModel.currentUser.collect { user ->
+                previousUser = currentUser
+                currentUser = user
+                //navegar a products si el usuario está logueado y estamos en login
+                if (user != null && navController.currentDestination?.route == "login") {
+                    navController.navigate("products") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            //manejar error silenciosamente
         }
     }
     
@@ -96,8 +109,6 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
             }
         }
     }
-    
-    val startDestination = if (currentUser != null) "products" else "login"
     
     NavHost(
         navController = navController,
@@ -132,9 +143,11 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
         }
         
         composable("products") {
+            val musicViewModel: MusicViewModel = viewModel(factory = viewModelFactory)
             ProductsScreen(
                 viewModel = productViewModel,
                 cartViewModel = cartViewModel,
+                musicViewModel = musicViewModel,
                 currentUserId = currentUser?.id ?: 0,
                 onNavigateToCart = {
                     navController.navigate("cart")
@@ -174,6 +187,18 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
                     navController.popBackStack()
                 },
                 onConfirmOrder = {
+                    navController.navigate("shipping_info")
+                }
+            )
+        }
+        
+        composable("shipping_info") {
+            ShippingInfoScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onConfirm = { shippingInfo ->
+                    //aquí se podría guardar la información de envío si fuera necesario
                     navController.popBackStack()
                     navController.navigate("order_history")
                 }

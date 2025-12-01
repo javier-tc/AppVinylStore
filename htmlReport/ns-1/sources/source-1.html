@@ -1,0 +1,425 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MainActivity</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore</a>
+</div>
+
+<h1>Coverage Summary for Class: MainActivity (com.example.vinylstore)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MainActivity</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">MainActivity$onCreate$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">MainActivity$onCreate$1$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/26)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore
+&nbsp;
+&nbsp;import android.os.Bundle
+&nbsp;import androidx.activity.ComponentActivity
+&nbsp;import androidx.activity.compose.setContent
+&nbsp;import androidx.activity.enableEdgeToEdge
+&nbsp;import androidx.compose.foundation.layout.padding
+&nbsp;import androidx.compose.material3.*
+&nbsp;import androidx.compose.runtime.*
+&nbsp;import androidx.compose.ui.Modifier
+&nbsp;import androidx.lifecycle.viewmodel.compose.viewModel
+&nbsp;import androidx.navigation.compose.NavHost
+&nbsp;import androidx.navigation.compose.composable
+&nbsp;import androidx.navigation.compose.rememberNavController
+&nbsp;import com.example.vinylstore.data.model.Product
+&nbsp;import com.example.vinylstore.data.model.User
+&nbsp;import com.example.vinylstore.data.remote.RetrofitClient
+&nbsp;import com.example.vinylstore.data.remote.SessionManager
+&nbsp;import com.example.vinylstore.repository.AuthRepository
+&nbsp;import com.example.vinylstore.repository.CartRepository
+&nbsp;import com.example.vinylstore.repository.MusicRepository
+&nbsp;import com.example.vinylstore.repository.OrderRepository
+&nbsp;import com.example.vinylstore.repository.ProductRepository
+&nbsp;import com.example.vinylstore.ui.screens.*
+&nbsp;import com.example.vinylstore.ui.theme.VinylStoreTheme
+&nbsp;import com.example.vinylstore.viewmodel.*
+&nbsp;import kotlinx.coroutines.launch
+&nbsp;
+<b class="nc">&nbsp;class MainActivity : ComponentActivity() {</b>
+&nbsp;    override fun onCreate(savedInstanceState: Bundle?) {
+<b class="nc">&nbsp;        super.onCreate(savedInstanceState)</b>
+<b class="nc">&nbsp;        enableEdgeToEdge()</b>
+&nbsp;        
+<b class="nc">&nbsp;        val sessionManager = SessionManager(this)</b>
+<b class="nc">&nbsp;        val authRepository = AuthRepository(</b>
+<b class="nc">&nbsp;            RetrofitClient.createAuthApi(sessionManager),</b>
+<b class="nc">&nbsp;            sessionManager</b>
+&nbsp;        )
+<b class="nc">&nbsp;        val productRepository = ProductRepository(</b>
+<b class="nc">&nbsp;            RetrofitClient.createProductApi(sessionManager)</b>
+&nbsp;        )
+<b class="nc">&nbsp;        val cartRepository = CartRepository(</b>
+<b class="nc">&nbsp;            RetrofitClient.createCartApi(sessionManager)</b>
+&nbsp;        )
+<b class="nc">&nbsp;        val orderRepository = OrderRepository(</b>
+<b class="nc">&nbsp;            RetrofitClient.createOrderApi(sessionManager)</b>
+&nbsp;        )
+&nbsp;        
+&nbsp;        // API Key de Last.fm - VinylStore
+<b class="nc">&nbsp;        val lastFmApiKey = &quot;e57b91397ed0950bb0e4ef8e33c367b3&quot;</b>
+<b class="nc">&nbsp;        val musicRepository = MusicRepository(</b>
+<b class="nc">&nbsp;            RetrofitClient.createMusicApi(),</b>
+<b class="nc">&nbsp;            lastFmApiKey</b>
+&nbsp;        )
+&nbsp;        
+<b class="nc">&nbsp;        val viewModelFactory = ViewModelFactory(</b>
+<b class="nc">&nbsp;            authRepository,</b>
+<b class="nc">&nbsp;            productRepository,</b>
+<b class="nc">&nbsp;            cartRepository,</b>
+<b class="nc">&nbsp;            orderRepository,</b>
+<b class="nc">&nbsp;            musicRepository</b>
+&nbsp;        )
+&nbsp;        
+<b class="nc">&nbsp;        setContent {</b>
+<b class="nc">&nbsp;            VinylStoreTheme {</b>
+<b class="nc">&nbsp;                VinylStoreApp(viewModelFactory = viewModelFactory)</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;@Composable
+&nbsp;fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
+&nbsp;    val navController = rememberNavController()
+&nbsp;    val authViewModel: AuthViewModel = viewModel(factory = viewModelFactory)
+&nbsp;    val productViewModel: ProductViewModel = viewModel(factory = viewModelFactory) 
+&nbsp;    val cartViewModel: CartViewModel = viewModel(factory = viewModelFactory)
+&nbsp;    
+&nbsp;    var currentUser by remember { mutableStateOf&lt;User?&gt;(null) }
+&nbsp;    var previousUser by remember { mutableStateOf&lt;User?&gt;(null) }
+&nbsp;    var selectedProduct by remember { mutableStateOf&lt;Product?&gt;(null) }
+&nbsp;    var editingProduct by remember { mutableStateOf&lt;Product?&gt;(null) }
+&nbsp;    
+&nbsp;    //inicializar startDestination de forma segura
+&nbsp;    val startDestination = remember { &quot;login&quot; }
+&nbsp;    
+&nbsp;    LaunchedEffect(Unit) {
+&nbsp;        try {
+&nbsp;            authViewModel.currentUser.collect { user -&gt;
+&nbsp;                previousUser = currentUser
+&nbsp;                currentUser = user
+&nbsp;                //navegar a products si el usuario está logueado y estamos en login
+&nbsp;                if (user != null &amp;&amp; navController.currentDestination?.route == &quot;login&quot;) {
+&nbsp;                    navController.navigate(&quot;products&quot;) {
+&nbsp;                        popUpTo(&quot;login&quot;) { inclusive = true }
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+&nbsp;            //manejar error silenciosamente
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    //navegar a login cuando el usuario cierra sesión (cambia de no-null a null)
+&nbsp;    LaunchedEffect(currentUser) {
+&nbsp;        if (previousUser != null &amp;&amp; currentUser == null &amp;&amp; navController.currentDestination?.route != &quot;login&quot;) {
+&nbsp;            navController.navigate(&quot;login&quot;) {
+&nbsp;                popUpTo(0) { inclusive = true }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    NavHost(
+&nbsp;        navController = navController,
+&nbsp;        startDestination = startDestination
+&nbsp;    ) {
+&nbsp;        composable(&quot;login&quot;) {
+&nbsp;            LoginScreen(
+&nbsp;                viewModel = authViewModel,
+&nbsp;                onLoginSuccess = {
+&nbsp;                    navController.navigate(&quot;products&quot;) {
+&nbsp;                        popUpTo(&quot;login&quot;) { inclusive = true }
+&nbsp;                    }
+&nbsp;                },
+&nbsp;                onNavigateToRegister = {
+&nbsp;                    navController.navigate(&quot;register&quot;)
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;register&quot;) {
+&nbsp;            RegisterScreen(
+&nbsp;                viewModel = authViewModel,
+&nbsp;                onRegisterSuccess = {
+&nbsp;                    navController.navigate(&quot;products&quot;) {
+&nbsp;                        popUpTo(&quot;login&quot;) { inclusive = true }
+&nbsp;                    }
+&nbsp;                },
+&nbsp;                onNavigateToLogin = {
+&nbsp;                    navController.popBackStack()
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;products&quot;) {
+&nbsp;            val musicViewModel: MusicViewModel = viewModel(factory = viewModelFactory)
+&nbsp;            ProductsScreen(
+&nbsp;                viewModel = productViewModel,
+&nbsp;                cartViewModel = cartViewModel,
+&nbsp;                musicViewModel = musicViewModel,
+&nbsp;                currentUserId = currentUser?.id ?: 0,
+&nbsp;                onNavigateToCart = {
+&nbsp;                    navController.navigate(&quot;cart&quot;)
+&nbsp;                },
+&nbsp;                onNavigateToProfile = {
+&nbsp;                    navController.navigate(&quot;profile&quot;)
+&nbsp;                },
+&nbsp;                onNavigateToDetail = { product -&gt;
+&nbsp;                    selectedProduct = product
+&nbsp;                    navController.navigate(&quot;product_detail&quot;)
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;product_detail&quot;) {
+&nbsp;            selectedProduct?.let { product -&gt;
+&nbsp;                ProductDetailScreen(
+&nbsp;                    product = product,
+&nbsp;                    cartViewModel = cartViewModel,
+&nbsp;                    currentUserId = currentUser?.id ?: 0,
+&nbsp;                    onBack = {
+&nbsp;                        selectedProduct = null
+&nbsp;                        navController.popBackStack()
+&nbsp;                    },
+&nbsp;                    onAddToCart = {
+&nbsp;                        navController.navigate(&quot;cart&quot;)
+&nbsp;                    }
+&nbsp;                )
+&nbsp;            }
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;cart&quot;) {
+&nbsp;            CartScreen(
+&nbsp;                cartViewModel = cartViewModel,
+&nbsp;                currentUserId = currentUser?.id ?: 0,
+&nbsp;                onBack = {
+&nbsp;                    navController.popBackStack()
+&nbsp;                },
+&nbsp;                onConfirmOrder = {
+&nbsp;                    navController.navigate(&quot;shipping_info&quot;)
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;shipping_info&quot;) {
+&nbsp;            ShippingInfoScreen(
+&nbsp;                onBack = {
+&nbsp;                    navController.popBackStack()
+&nbsp;                },
+&nbsp;                onConfirm = { shippingInfo -&gt;
+&nbsp;                    //aquí se podría guardar la información de envío si fuera necesario
+&nbsp;                    navController.popBackStack()
+&nbsp;                    navController.navigate(&quot;order_history&quot;)
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;profile&quot;) {
+&nbsp;            val musicViewModel: MusicViewModel = viewModel(factory = viewModelFactory)
+&nbsp;            ProfileScreen(
+&nbsp;                userName = currentUser?.nombre ?: &quot;&quot;,
+&nbsp;                userEmail = currentUser?.email ?: &quot;&quot;,
+&nbsp;                isAdmin = currentUser?.rol == &quot;administrador&quot;,
+&nbsp;                musicViewModel = musicViewModel,
+&nbsp;                onLogout = {
+&nbsp;                    authViewModel.logout()
+&nbsp;                    //la navegación se maneja automáticamente cuando currentUser se vuelve null
+&nbsp;                },
+&nbsp;                onBack = {
+&nbsp;                    navController.popBackStack()
+&nbsp;                },
+&nbsp;                onNavigateToOrderHistory = {
+&nbsp;                    navController.navigate(&quot;order_history&quot;)
+&nbsp;                },
+&nbsp;                onNavigateToAdminProducts = {
+&nbsp;                    if (currentUser?.rol == &quot;administrador&quot;) {
+&nbsp;                        navController.navigate(&quot;admin_products&quot;)
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;order_history&quot;) {
+&nbsp;            val orderViewModel: OrderViewModel = viewModel(factory = viewModelFactory)
+&nbsp;            OrderHistoryScreen(
+&nbsp;                orderViewModel = orderViewModel,
+&nbsp;                userId = currentUser?.id ?: 0,
+&nbsp;                onBack = {
+&nbsp;                    navController.popBackStack()
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;admin_products&quot;) {
+&nbsp;            AdminProductsScreen(
+&nbsp;                viewModel = productViewModel,
+&nbsp;                onBack = {
+&nbsp;                    navController.popBackStack()
+&nbsp;                },
+&nbsp;                onAddProduct = {
+&nbsp;                    editingProduct = null
+&nbsp;                    navController.navigate(&quot;product_form&quot;)
+&nbsp;                },
+&nbsp;                onEditProduct = { product -&gt;
+&nbsp;                    editingProduct = product
+&nbsp;                    navController.navigate(&quot;product_form&quot;)
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;        
+&nbsp;        composable(&quot;product_form&quot;) {
+&nbsp;            ProductFormScreen(
+&nbsp;                viewModel = productViewModel,
+&nbsp;                product = editingProduct,
+&nbsp;                onSave = {
+&nbsp;                    editingProduct = null
+&nbsp;                    navController.popBackStack()
+&nbsp;                },
+&nbsp;                onCancel = {
+&nbsp;                    editingProduct = null
+&nbsp;                    navController.popBackStack()
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

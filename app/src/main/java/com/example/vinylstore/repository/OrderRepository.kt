@@ -62,7 +62,7 @@ class OrderRepository(
         }
     }
     
-    suspend fun createOrder(productId: Int, cantidad: Int, precioUnitario: Double, estado: String = "PENDIENTE"): Result<Order> {
+    suspend fun createOrder(productId: Int, cantidad: Int, precioUnitario: Double, estado: String = "COMPLETADO"): Result<Order> {
         return try {
             val request = OrderRequest(productId, cantidad, precioUnitario, estado)
             val response = orderApi.createOrder(request)

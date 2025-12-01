@@ -1,0 +1,189 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TrackDto</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.data.remote.dto</a>
+</div>
+
+<h1>Coverage Summary for Class: TrackDto (com.example.vinylstore.data.remote.dto)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TrackDto</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66,7%
+  </span>
+  <span class="absValue">
+    (4/6)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.data.remote.dto
+&nbsp;
+&nbsp;import com.google.gson.JsonDeserializationContext
+&nbsp;import com.google.gson.JsonDeserializer
+&nbsp;import com.google.gson.JsonElement
+&nbsp;import com.google.gson.annotations.JsonAdapter
+&nbsp;import com.google.gson.annotations.SerializedName
+&nbsp;import java.lang.reflect.Type
+&nbsp;
+&nbsp;// DTOs para la API de Last.fm
+&nbsp;data class LastFmResponse(
+&nbsp;    @SerializedName(&quot;tracks&quot;)
+&nbsp;    val tracks: TracksWrapper?
+&nbsp;)
+&nbsp;
+&nbsp;data class TracksWrapper(
+&nbsp;    @SerializedName(&quot;track&quot;)
+&nbsp;    @JsonAdapter(TrackDeserializer::class)
+&nbsp;    val track: List&lt;TrackDto&gt;?
+&nbsp;)
+&nbsp;
+&nbsp;// Deserializador personalizado para manejar track que puede ser objeto único o lista
+&nbsp;class TrackDeserializer : JsonDeserializer&lt;List&lt;TrackDto&gt;&gt; {
+&nbsp;    override fun deserialize(
+&nbsp;        json: JsonElement?,
+&nbsp;        typeOfT: Type?,
+&nbsp;        context: JsonDeserializationContext?
+&nbsp;    ): List&lt;TrackDto&gt; {
+&nbsp;        if (json == null || json.isJsonNull) {
+&nbsp;            return emptyList()
+&nbsp;        }
+&nbsp;        
+&nbsp;        if (json.isJsonArray) {
+&nbsp;            // Es una lista
+&nbsp;            return json.asJsonArray.mapNotNull { element -&gt;
+&nbsp;                try {
+&nbsp;                    context?.deserialize&lt;TrackDto&gt;(element, TrackDto::class.java)
+&nbsp;                } catch (e: Exception) {
+&nbsp;                    null
+&nbsp;                }
+&nbsp;            }
+&nbsp;        } else if (json.isJsonObject) {
+&nbsp;            // Es un objeto único
+&nbsp;            return try {
+&nbsp;                listOfNotNull(context?.deserialize&lt;TrackDto&gt;(json, TrackDto::class.java))
+&nbsp;            } catch (e: Exception) {
+&nbsp;                emptyList()
+&nbsp;            }
+&nbsp;        }
+&nbsp;        
+&nbsp;        return emptyList()
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;data class TrackDto(
+<b class="fc">&nbsp;    @SerializedName(&quot;name&quot;)</b>
+<b class="nc">&nbsp;    val name: String = &quot;&quot;,</b>
+<b class="fc">&nbsp;    @SerializedName(&quot;artist&quot;)</b>
+&nbsp;    val artist: ArtistInfo?,
+<b class="fc">&nbsp;    @SerializedName(&quot;image&quot;)</b>
+&nbsp;    val images: List&lt;ImageDto&gt;?,
+<b class="fc">&nbsp;    @SerializedName(&quot;url&quot;)</b>
+<b class="nc">&nbsp;    val url: String? = null</b>
+&nbsp;)
+&nbsp;
+&nbsp;data class ArtistInfo(
+&nbsp;    @SerializedName(&quot;name&quot;)
+&nbsp;    val name: String = &quot;&quot;
+&nbsp;)
+&nbsp;
+&nbsp;data class ImageDto(
+&nbsp;    @SerializedName(&quot;#text&quot;)
+&nbsp;    val url: String,
+&nbsp;    @SerializedName(&quot;size&quot;)
+&nbsp;    val size: String
+&nbsp;)
+&nbsp;
+&nbsp;// Modelo simplificado para la UI
+&nbsp;data class MusicRecommendation(
+&nbsp;    val trackName: String,
+&nbsp;    val artistName: String,
+&nbsp;    val imageUrl: String,
+&nbsp;    val url: String?
+&nbsp;)
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

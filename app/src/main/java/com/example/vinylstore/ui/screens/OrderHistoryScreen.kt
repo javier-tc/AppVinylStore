@@ -19,10 +19,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.example.vinylstore.ui.util.formatOrderDate
+import com.example.vinylstore.ui.util.formatOrderStatus
+import com.example.vinylstore.ui.util.getOrderStatusColor
 import com.example.vinylstore.viewmodel.OrderViewModel
 import com.example.vinylstore.viewmodel.OrderWithProduct
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -206,8 +207,7 @@ fun OrderCard(orderWithProduct: OrderWithProduct) {
             }
             
             Text(
-                text = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                    .format(Date(orderWithProduct.order.fecha)),
+                text = formatOrderDate(orderWithProduct.order.fecha),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
@@ -217,10 +217,11 @@ fun OrderCard(orderWithProduct: OrderWithProduct) {
 
 @Composable
 fun StatusChip(estado: String) {
-    val color = when (estado) {
-        "confirmado" -> MaterialTheme.colorScheme.primary
-        "pendiente" -> MaterialTheme.colorScheme.tertiary
-        "entregado" -> MaterialTheme.colorScheme.primaryContainer
+    val colorName = getOrderStatusColor(estado)
+    val color = when (colorName) {
+        "primary" -> MaterialTheme.colorScheme.primary
+        "tertiary" -> MaterialTheme.colorScheme.tertiary
+        "primaryContainer" -> MaterialTheme.colorScheme.primaryContainer
         else -> MaterialTheme.colorScheme.error
     }
     
@@ -229,7 +230,7 @@ fun StatusChip(estado: String) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Text(
-            text = estado.replaceFirstChar { it.uppercase() },
+            text = formatOrderStatus(estado),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onPrimary

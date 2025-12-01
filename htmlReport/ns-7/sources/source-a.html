@@ -1,0 +1,300 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ShippingInfo</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.ui.screens</a>
+</div>
+
+<h1>Coverage Summary for Class: ShippingInfo (com.example.vinylstore.ui.screens)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ShippingInfo</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/5)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.ui.screens
+&nbsp;
+&nbsp;import androidx.compose.foundation.layout.*
+&nbsp;import androidx.compose.foundation.rememberScrollState
+&nbsp;import androidx.compose.foundation.shape.RoundedCornerShape
+&nbsp;import androidx.compose.foundation.verticalScroll
+&nbsp;import androidx.compose.material.icons.Icons
+&nbsp;import androidx.compose.material.icons.filled.ArrowBack
+&nbsp;import androidx.compose.material3.*
+&nbsp;import androidx.compose.runtime.*
+&nbsp;import androidx.compose.ui.Alignment
+&nbsp;import androidx.compose.ui.Modifier
+&nbsp;import androidx.compose.ui.text.font.FontWeight
+&nbsp;import androidx.compose.ui.unit.dp
+&nbsp;
+&nbsp;@OptIn(ExperimentalMaterial3Api::class)
+&nbsp;@Composable
+&nbsp;fun ShippingInfoScreen(
+&nbsp;    onBack: () -&gt; Unit,
+&nbsp;    onConfirm: (ShippingInfo) -&gt; Unit
+&nbsp;) {
+&nbsp;    var direccion by remember { mutableStateOf(&quot;&quot;) }
+&nbsp;    var ciudad by remember { mutableStateOf(&quot;&quot;) }
+&nbsp;    var codigoPostal by remember { mutableStateOf(&quot;&quot;) }
+&nbsp;    var telefono by remember { mutableStateOf(&quot;&quot;) }
+&nbsp;    var instrucciones by remember { mutableStateOf(&quot;&quot;) }
+&nbsp;    
+&nbsp;    var direccionError by remember { mutableStateOf&lt;String?&gt;(null) }
+&nbsp;    var ciudadError by remember { mutableStateOf&lt;String?&gt;(null) }
+&nbsp;    var codigoPostalError by remember { mutableStateOf&lt;String?&gt;(null) }
+&nbsp;    var telefonoError by remember { mutableStateOf&lt;String?&gt;(null) }
+&nbsp;    
+&nbsp;    fun validateForm(): Boolean {
+&nbsp;        var isValid = true
+&nbsp;        
+&nbsp;        if (direccion.isBlank()) {
+&nbsp;            direccionError = &quot;La dirección es requerida&quot;
+&nbsp;            isValid = false
+&nbsp;        } else {
+&nbsp;            direccionError = null
+&nbsp;        }
+&nbsp;        
+&nbsp;        if (ciudad.isBlank()) {
+&nbsp;            ciudadError = &quot;La ciudad es requerida&quot;
+&nbsp;            isValid = false
+&nbsp;        } else {
+&nbsp;            ciudadError = null
+&nbsp;        }
+&nbsp;        
+&nbsp;        if (codigoPostal.isBlank()) {
+&nbsp;            codigoPostalError = &quot;El código postal es requerido&quot;
+&nbsp;            isValid = false
+&nbsp;        } else if (!codigoPostal.matches(Regex(&quot;\\d{4,6}&quot;))) {
+&nbsp;            codigoPostalError = &quot;Código postal inválido&quot;
+&nbsp;            isValid = false
+&nbsp;        } else {
+&nbsp;            codigoPostalError = null
+&nbsp;        }
+&nbsp;        
+&nbsp;        if (telefono.isBlank()) {
+&nbsp;            telefonoError = &quot;El teléfono es requerido&quot;
+&nbsp;            isValid = false
+&nbsp;        } else if (!telefono.matches(Regex(&quot;\\d{8,12}&quot;))) {
+&nbsp;            telefonoError = &quot;Teléfono inválido&quot;
+&nbsp;            isValid = false
+&nbsp;        } else {
+&nbsp;            telefonoError = null
+&nbsp;        }
+&nbsp;        
+&nbsp;        return isValid
+&nbsp;    }
+&nbsp;    
+&nbsp;    Scaffold(
+&nbsp;        topBar = {
+&nbsp;            TopAppBar(
+&nbsp;                title = { Text(&quot;Datos de Envío&quot;) },
+&nbsp;                navigationIcon = {
+&nbsp;                    IconButton(onClick = onBack) {
+&nbsp;                        Icon(Icons.Filled.ArrowBack, contentDescription = &quot;Atrás&quot;)
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            )
+&nbsp;        }
+&nbsp;    ) { padding -&gt;
+&nbsp;        Column(
+&nbsp;            modifier = Modifier
+&nbsp;                .fillMaxSize()
+&nbsp;                .padding(padding)
+&nbsp;                .padding(16.dp)
+&nbsp;                .verticalScroll(rememberScrollState()),
+&nbsp;            verticalArrangement = Arrangement.spacedBy(16.dp)
+&nbsp;        ) {
+&nbsp;            Text(
+&nbsp;                text = &quot;Ingresa los datos de envío para tu pedido&quot;,
+&nbsp;                style = MaterialTheme.typography.titleMedium,
+&nbsp;                fontWeight = FontWeight.Bold
+&nbsp;            )
+&nbsp;            
+&nbsp;            OutlinedTextField(
+&nbsp;                value = direccion,
+&nbsp;                onValueChange = {
+&nbsp;                    direccion = it
+&nbsp;                    direccionError = null
+&nbsp;                },
+&nbsp;                label = { Text(&quot;Dirección&quot;) },
+&nbsp;                modifier = Modifier.fillMaxWidth(),
+&nbsp;                singleLine = true,
+&nbsp;                isError = direccionError != null,
+&nbsp;                supportingText = direccionError?.let { { Text(it) } }
+&nbsp;            )
+&nbsp;            
+&nbsp;            OutlinedTextField(
+&nbsp;                value = ciudad,
+&nbsp;                onValueChange = {
+&nbsp;                    ciudad = it
+&nbsp;                    ciudadError = null
+&nbsp;                },
+&nbsp;                label = { Text(&quot;Ciudad&quot;) },
+&nbsp;                modifier = Modifier.fillMaxWidth(),
+&nbsp;                singleLine = true,
+&nbsp;                isError = ciudadError != null,
+&nbsp;                supportingText = ciudadError?.let { { Text(it) } }
+&nbsp;            )
+&nbsp;            
+&nbsp;            OutlinedTextField(
+&nbsp;                value = codigoPostal,
+&nbsp;                onValueChange = {
+&nbsp;                    codigoPostal = it
+&nbsp;                    codigoPostalError = null
+&nbsp;                },
+&nbsp;                label = { Text(&quot;Código Postal&quot;) },
+&nbsp;                modifier = Modifier.fillMaxWidth(),
+&nbsp;                singleLine = true,
+&nbsp;                isError = codigoPostalError != null,
+&nbsp;                supportingText = codigoPostalError?.let { { Text(it) } }
+&nbsp;            )
+&nbsp;            
+&nbsp;            OutlinedTextField(
+&nbsp;                value = telefono,
+&nbsp;                onValueChange = {
+&nbsp;                    telefono = it
+&nbsp;                    telefonoError = null
+&nbsp;                },
+&nbsp;                label = { Text(&quot;Teléfono&quot;) },
+&nbsp;                modifier = Modifier.fillMaxWidth(),
+&nbsp;                singleLine = true,
+&nbsp;                isError = telefonoError != null,
+&nbsp;                supportingText = telefonoError?.let { { Text(it) } }
+&nbsp;            )
+&nbsp;            
+&nbsp;            OutlinedTextField(
+&nbsp;                value = instrucciones,
+&nbsp;                onValueChange = { instrucciones = it },
+&nbsp;                label = { Text(&quot;Instrucciones de entrega (opcional)&quot;) },
+&nbsp;                modifier = Modifier
+&nbsp;                    .fillMaxWidth()
+&nbsp;                    .height(120.dp),
+&nbsp;                maxLines = 4
+&nbsp;            )
+&nbsp;            
+&nbsp;            Spacer(modifier = Modifier.weight(1f))
+&nbsp;            
+&nbsp;            Button(
+&nbsp;                onClick = {
+&nbsp;                    if (validateForm()) {
+&nbsp;                        onConfirm(
+&nbsp;                            ShippingInfo(
+&nbsp;                                direccion = direccion.trim(),
+&nbsp;                                ciudad = ciudad.trim(),
+&nbsp;                                codigoPostal = codigoPostal.trim(),
+&nbsp;                                telefono = telefono.trim(),
+&nbsp;                                instrucciones = instrucciones.trim()
+&nbsp;                            )
+&nbsp;                        )
+&nbsp;                    }
+&nbsp;                },
+&nbsp;                modifier = Modifier
+&nbsp;                    .fillMaxWidth()
+&nbsp;                    .height(56.dp),
+&nbsp;                shape = RoundedCornerShape(12.dp)
+&nbsp;            ) {
+&nbsp;                Text(&quot;Confirmar Envío&quot;, style = MaterialTheme.typography.titleMedium)
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+&nbsp;data class ShippingInfo(
+<b class="nc">&nbsp;    val direccion: String,</b>
+<b class="nc">&nbsp;    val ciudad: String,</b>
+<b class="nc">&nbsp;    val codigoPostal: String,</b>
+<b class="nc">&nbsp;    val telefono: String,</b>
+<b class="nc">&nbsp;    val instrucciones: String = &quot;&quot;</b>
+&nbsp;)
+&nbsp;
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MappersKt</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.repository</a>
+</div>
+
+<h1>Coverage Summary for Class: MappersKt (com.example.vinylstore.repository)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MappersKt</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (46/46)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.repository
+&nbsp;
+&nbsp;import com.example.vinylstore.data.model.*
+&nbsp;import com.example.vinylstore.data.remote.dto.*
+&nbsp;
+&nbsp;//mapeo de ProductDto a Product
+&nbsp;fun ProductDto.toProduct(): Product {
+<b class="fc">&nbsp;    return Product(</b>
+<b class="fc">&nbsp;        id = this.id,</b>
+<b class="fc">&nbsp;        titulo = this.title,</b>
+<b class="fc">&nbsp;        artista = this.artist,</b>
+<b class="fc">&nbsp;        precio = this.price,</b>
+<b class="fc">&nbsp;        descripcion = this.description,</b>
+<b class="fc">&nbsp;        genero = this.genre,</b>
+<b class="fc">&nbsp;        imagenUrl = this.imageUrl,</b>
+<b class="fc">&nbsp;        stock = this.stock</b>
+&nbsp;    )
+&nbsp;}
+&nbsp;
+&nbsp;//mapeo de Product a CreateProductRequest
+&nbsp;fun Product.toCreateProductRequest(): CreateProductRequest {
+<b class="fc">&nbsp;    return CreateProductRequest(</b>
+<b class="fc">&nbsp;        title = this.titulo,</b>
+<b class="fc">&nbsp;        artist = this.artista,</b>
+<b class="fc">&nbsp;        genre = this.genero,</b>
+<b class="fc">&nbsp;        description = this.descripcion,</b>
+<b class="fc">&nbsp;        price = this.precio,</b>
+<b class="fc">&nbsp;        stock = this.stock,</b>
+<b class="fc">&nbsp;        imageUrl = this.imagenUrl</b>
+&nbsp;    )
+&nbsp;}
+&nbsp;
+&nbsp;//mapeo de UserProfileDto a User
+&nbsp;fun UserProfileDto.toUser(): User {
+<b class="fc">&nbsp;    return User(</b>
+<b class="fc">&nbsp;        id = this.id.toLong(),</b>
+<b class="fc">&nbsp;        nombre = &quot;${this.firstName} ${this.lastName}&quot;.trim(),</b>
+<b class="fc">&nbsp;        email = this.email,</b>
+<b class="fc">&nbsp;        password = &quot;&quot;,</b>
+<b class="fc">&nbsp;        rol = when (this.role.uppercase()) {</b>
+<b class="fc">&nbsp;            &quot;ADMIN&quot; -&gt; &quot;administrador&quot;</b>
+<b class="fc">&nbsp;            else -&gt; &quot;cliente&quot;</b>
+&nbsp;        }
+&nbsp;    )
+&nbsp;}
+&nbsp;
+&nbsp;//mapeo de CartItemDto a CartItem
+&nbsp;fun CartItemDto.toCartItem(): CartItem {
+<b class="fc">&nbsp;    return CartItem(</b>
+<b class="fc">&nbsp;        id = this.id.toLong(),</b>
+<b class="fc">&nbsp;        productId = this.productId,</b>
+<b class="fc">&nbsp;        cantidad = this.quantity,</b>
+<b class="fc">&nbsp;        userId = this.userId.toLong()</b>
+&nbsp;    )
+&nbsp;}
+&nbsp;
+&nbsp;//mapeo de OrderResponse a Order
+&nbsp;fun com.example.vinylstore.data.remote.dto.OrderResponse.toOrder(): Order {
+&nbsp;    //convertir fecha ISO string a timestamp Long
+<b class="fc">&nbsp;    val fechaTimestamp = try {</b>
+<b class="fc">&nbsp;        val formatter = java.time.format.DateTimeFormatter.ISO_DATE_TIME</b>
+<b class="fc">&nbsp;        val dateTime = java.time.LocalDateTime.parse(this.fecha, formatter)</b>
+<b class="fc">&nbsp;        val zonedDateTime = dateTime.atZone(java.time.ZoneId.systemDefault())</b>
+<b class="fc">&nbsp;        zonedDateTime.toInstant().toEpochMilli()</b>
+&nbsp;    } catch (e: Exception) {
+<b class="fc">&nbsp;        System.currentTimeMillis() //fallback a fecha actual si falla el parseo</b>
+&nbsp;    }
+&nbsp;    
+&nbsp;    //normalizar estado a minúsculas para el modelo local
+<b class="fc">&nbsp;    val estadoNormalizado = this.estado.lowercase()</b>
+&nbsp;    
+<b class="fc">&nbsp;    return Order(</b>
+<b class="fc">&nbsp;        id = this.id,</b>
+<b class="fc">&nbsp;        productId = this.productId,</b>
+<b class="fc">&nbsp;        userId = this.userId,</b>
+<b class="fc">&nbsp;        cantidad = this.cantidad,</b>
+<b class="fc">&nbsp;        precioUnitario = this.precioUnitario,</b>
+<b class="fc">&nbsp;        total = this.total,</b>
+<b class="fc">&nbsp;        fecha = fechaTimestamp,</b>
+<b class="fc">&nbsp;        estado = estadoNormalizado</b>
+&nbsp;    )
+&nbsp;}
+&nbsp;
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > OrderWithProduct</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.vinylstore.viewmodel</a>
+</div>
+
+<h1>Coverage Summary for Class: OrderWithProduct (com.example.vinylstore.viewmodel)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">OrderWithProduct</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.vinylstore.viewmodel
+&nbsp;
+&nbsp;import androidx.lifecycle.ViewModel
+&nbsp;import androidx.lifecycle.viewModelScope
+&nbsp;import com.example.vinylstore.data.model.Order
+&nbsp;import com.example.vinylstore.data.model.Product
+&nbsp;import com.example.vinylstore.repository.OrderRepository
+&nbsp;import com.example.vinylstore.repository.ProductRepository
+&nbsp;import kotlinx.coroutines.flow.Flow
+&nbsp;import kotlinx.coroutines.flow.flatMapLatest
+&nbsp;import kotlinx.coroutines.flow.flow
+&nbsp;import kotlinx.coroutines.flow.flowOf
+&nbsp;import kotlinx.coroutines.launch
+&nbsp;
+&nbsp;class OrderViewModel(
+&nbsp;    private val orderRepository: OrderRepository,
+&nbsp;    private val productRepository: ProductRepository
+&nbsp;) : ViewModel() {
+&nbsp;    
+&nbsp;    init {
+&nbsp;        viewModelScope.launch {
+&nbsp;            orderRepository.getMyOrders()
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getOrdersByUser(userId: Long): Flow&lt;List&lt;OrderWithProduct&gt;&gt; {
+&nbsp;        return orderRepository.orders.flatMapLatest { orders -&gt;
+&nbsp;            val userOrders = orders.filter { it.userId == userId }
+&nbsp;            if (userOrders.isEmpty()) {
+&nbsp;                flowOf(emptyList())
+&nbsp;            } else {
+&nbsp;                flow {
+&nbsp;                    val result = mutableListOf&lt;OrderWithProduct&gt;()
+&nbsp;                    userOrders.forEach { order -&gt;
+&nbsp;                        //intentar obtener el producto desde el repository primero
+&nbsp;                        val productResult = productRepository.getProductById(order.productId)
+&nbsp;                        val product = productResult.getOrNull()
+&nbsp;                        result.add(OrderWithProduct(order, product))
+&nbsp;                    }
+&nbsp;                    emit(result)
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun getAllOrders(estado: String? = null): Flow&lt;List&lt;OrderWithProduct&gt;&gt; {
+&nbsp;        return orderRepository.orders.flatMapLatest { orders -&gt;
+&nbsp;            val filteredOrders = if (estado != null) {
+&nbsp;                orders.filter { it.estado == estado }
+&nbsp;            } else {
+&nbsp;                orders
+&nbsp;            }
+&nbsp;            if (filteredOrders.isEmpty()) {
+&nbsp;                flowOf(emptyList())
+&nbsp;            } else {
+&nbsp;                flow {
+&nbsp;                    val result = mutableListOf&lt;OrderWithProduct&gt;()
+&nbsp;                    filteredOrders.forEach { order -&gt;
+&nbsp;                        val productResult = productRepository.getProductById(order.productId)
+&nbsp;                        val product = productResult.getOrNull()
+&nbsp;                        result.add(OrderWithProduct(order, product))
+&nbsp;                    }
+&nbsp;                    emit(result)
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun refreshOrders() {
+&nbsp;        viewModelScope.launch {
+&nbsp;            orderRepository.getMyOrders()
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun refreshAllOrders() {
+&nbsp;        viewModelScope.launch {
+&nbsp;            orderRepository.getAllOrders()
+&nbsp;        }
+&nbsp;    }
+&nbsp;    
+&nbsp;    fun refreshOrdersByEstado(estado: String) {
+&nbsp;        viewModelScope.launch {
+&nbsp;            orderRepository.getOrdersByEstado(estado)
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+&nbsp;
+<b class="fc">&nbsp;data class OrderWithProduct(</b>
+<b class="fc">&nbsp;    val order: Order,</b>
+<b class="fc">&nbsp;    val product: Product?</b>
+&nbsp;)
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-11-30 17:15</div>
+</div>
+</body>
+</html>

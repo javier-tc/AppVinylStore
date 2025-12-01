@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+ANDROID_STUDIO_COVERAGE.md
+COVERAGE_GUIDE.md
+UI_TESTS_GUIDE.md

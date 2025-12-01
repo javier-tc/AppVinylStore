@@ -1,12 +1,23 @@
 package com.example.vinylstore.util
 
+import java.util.regex.Pattern
+
 //lógica de validación centralizada y desacoplada
 object Validation {
+    
+    private val EMAIL_PATTERN = Pattern.compile(
+        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    )
+    
+    private val URL_PATTERN = Pattern.compile(
+        "^(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*/?$",
+        Pattern.CASE_INSENSITIVE
+    )
     
     fun validateEmail(email: String): ValidationResult {
         return when {
             email.isBlank() -> ValidationResult.Error("El email no puede estar vacío")
-            !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> 
+            !EMAIL_PATTERN.matcher(email).matches() -> 
                 ValidationResult.Error("Ingresa un email válido")
             else -> ValidationResult.Success
         }
@@ -75,7 +86,7 @@ object Validation {
     fun validateImageUrl(url: String): ValidationResult {
         return when {
             url.isBlank() -> ValidationResult.Success
-            !android.util.Patterns.WEB_URL.matcher(url).matches() -> 
+            !URL_PATTERN.matcher(url).matches() -> 
                 ValidationResult.Error("Ingresa una URL válida")
             else -> ValidationResult.Success
         }

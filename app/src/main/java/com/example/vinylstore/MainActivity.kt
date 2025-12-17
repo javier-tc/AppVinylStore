@@ -226,6 +226,11 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
                     if (currentUser?.rol == "administrador") {
                         navController.navigate("admin_products")
                     }
+                },
+                onNavigateToAdminDashboard = {
+                    if (currentUser?.rol == "administrador") {
+                        navController.navigate("admin_dashboard")
+                    }
                 }
             )
         }
@@ -258,13 +263,53 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
             )
         }
         
+        composable("admin_dashboard") {
+            val orderViewModel: OrderViewModel = viewModel(factory = viewModelFactory)
+            AdminDashboardScreen(
+                productViewModel = productViewModel,
+                orderViewModel = orderViewModel,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToProducts = {
+                    navController.navigate("admin_products")
+                },
+                onNavigateToOrders = {
+                    navController.navigate("admin_orders")
+                }
+            )
+        }
+        
+        composable("admin_orders") {
+            val orderViewModel: OrderViewModel = viewModel(factory = viewModelFactory)
+            AdminOrdersScreen(
+                orderViewModel = orderViewModel,
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        
         composable("product_form") {
+            var wasNewProduct by remember { mutableStateOf(editingProduct == null) }
+            
+            LaunchedEffect(editingProduct) {
+                wasNewProduct = editingProduct == null
+            }
+            
             ProductFormScreen(
                 viewModel = productViewModel,
                 product = editingProduct,
                 onSave = {
+                    val isNew = wasNewProduct
                     editingProduct = null
-                    navController.popBackStack()
+                    if (isNew) {
+                        navController.navigate("admin_products") {
+                            popUpTo("admin_products") { inclusive = true }
+                        }
+                    } else {
+                        navController.popBackStack()
+                    }
                 },
                 onCancel = {
                     editingProduct = null

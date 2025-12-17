@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
@@ -54,7 +55,8 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     onBack: () -> Unit,
     onNavigateToOrderHistory: () -> Unit,
-    onNavigateToAdminProducts: () -> Unit
+    onNavigateToAdminProducts: () -> Unit,
+    onNavigateToAdminDashboard: () -> Unit
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var imageFile by remember { mutableStateOf<File?>(null) }
@@ -249,7 +251,7 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                         Text(
-                            text = userName,
+                            text = userName.uppercase(),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -289,6 +291,23 @@ fun ProfileScreen(
             }
             
             if (isAdmin) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    onClick = onNavigateToAdminDashboard
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Dashboard de Administración",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Icon(Icons.Default.Dashboard, contentDescription = null)
+                    }
+                }
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),

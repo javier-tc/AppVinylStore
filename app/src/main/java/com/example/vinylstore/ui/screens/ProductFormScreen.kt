@@ -28,17 +28,24 @@ fun ProductFormScreen(
 ) {
     val estado = viewModel.productFormState.collectAsState()
     val saveState = viewModel.saveProductState.collectAsState()
+    var hasHandledSuccess by remember(product?.id) { mutableStateOf(false) }
     
-    LaunchedEffect(product) {
+    LaunchedEffect(product?.id) {
         viewModel.initializeForm(product)
+        hasHandledSuccess = false
     }
     
     LaunchedEffect(saveState.value) {
-        when (saveState.value) {
-            is ProductViewModel.SaveProductState.Success -> {
+        val state = saveState.value
+        if (state is ProductViewModel.SaveProductState.Success && !hasHandledSuccess) {
+            hasHandledSuccess = true
+            kotlinx.coroutines.delay(300)
+            try {
+                viewModel.resetSaveState()
                 onSave()
+            } catch (e: Exception) {
+                //ignorar errores si el composable ya se desmontó
             }
-            else -> {}
         }
     }
     
@@ -53,7 +60,14 @@ fun ProductFormScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = { viewModel.saveProduct(product?.id) },
+                        onClick = { 
+                            val productIdToSave = product?.id
+                            if (productIdToSave != null && productIdToSave <= 0) {
+                                //mostrar error si el ID es inválido
+                            } else {
+                                viewModel.saveProduct(productIdToSave)
+                            }
+                        },
                         enabled = saveState.value !is ProductViewModel.SaveProductState.Loading
                     ) {
                         if (saveState.value is ProductViewModel.SaveProductState.Loading) {

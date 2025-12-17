@@ -48,6 +48,11 @@ class ProductViewModel(
             stock = product?.stock?.toString() ?: "",
             errores = ProductFormErrors()
         )
+        _saveProductState.value = SaveProductState.Initial
+    }
+    
+    fun resetSaveState() {
+        _saveProductState.value = SaveProductState.Initial
     }
     
     fun onTituloChange(titulo: String) {
@@ -195,9 +200,19 @@ class ProductViewModel(
             
             _saveProductState.value = SaveProductState.Loading
             
-            val precioValor = estado.precio.toDouble()
+            val precioValor = estado.precio.toDoubleOrNull()
             val stockValor = estado.stock.toIntOrNull() ?: 0
             val imagenUrlFinal = estado.imagenUrl.ifBlank { "https://via.placeholder.com/300" }
+            
+            if (precioValor == null) {
+                _saveProductState.value = SaveProductState.Error("El precio debe ser un número válido")
+                return@launch
+            }
+            
+            if (productId != null && productId <= 0) {
+                _saveProductState.value = SaveProductState.Error("ID de producto inválido")
+                return@launch
+            }
             
             val newProduct = Product(
                 id = productId ?: 0,
@@ -210,16 +225,24 @@ class ProductViewModel(
                 stock = stockValor
             )
             
-            val result = if (productId == null) {
-                productRepository.createProduct(newProduct)
-            } else {
-                productRepository.updateProduct(newProduct)
-            }
-            
-            result.onSuccess {
-                _saveProductState.value = SaveProductState.Success
-            }.onFailure { exception ->
-                _saveProductState.value = SaveProductState.Error(exception.message ?: "Error al guardar producto")
+            try {
+                val result = if (productId == null) {
+                    productRepository.createProduct(newProduct)
+                } else {
+                    productRepository.updateProduct(newProduct)
+                }
+                
+                result.onSuccess {
+                    _saveProductState.value = SaveProductState.Success
+                }.onFailure { exception ->
+                    _saveProductState.value = SaveProductState.Error(
+                        exception.message ?: "Error al guardar producto"
+                    )
+                }
+            } catch (e: Exception) {
+                _saveProductState.value = SaveProductState.Error(
+                    "Error inesperado: ${e.message ?: e.javaClass.simpleName}"
+                )
             }
         }
     }

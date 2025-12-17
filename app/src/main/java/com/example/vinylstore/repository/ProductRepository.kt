@@ -62,19 +62,51 @@ class ProductRepository(
     
     suspend fun updateProduct(product: Product): Result<Product> {
         return try {
-            val request = product.toCreateProductRequest()
-            val response = productApi.updateProduct(product.id, request)
-            if (response.isSuccessful && response.body() != null) {
-                val updatedProduct = response.body()!!.toProduct()
-                _products.update { list ->
-                    list.map { if (it.id == updatedProduct.id) updatedProduct else it }
-                }
-                Result.success(updatedProduct)
-            } else {
-                Result.failure(Exception("Error al actualizar producto: ${response.message()}"))
+            if (product.id <= 0) {
+                return Result.failure(Exception("Error: ID de producto inválido: ${product.id}"))
             }
+            
+            val request = try {
+                product.toCreateProductRequest()
+            } catch (e: Exception) {
+                return Result.failure(Exception("Error al crear solicitud: ${e.message}"))
+            }
+            
+            val response = try {
+                productApi.updateProduct(product.id, request)
+            } catch (e: Exception) {
+                return Result.failure(Exception("Error al enviar solicitud: ${e.message ?: e.javaClass.simpleName}"))
+            }
+            
+            if (!response.isSuccessful) {
+                val errorMessage = try {
+                    val errorBody = response.errorBody()
+                    val errorBodyString = errorBody?.string() ?: "Sin detalles del error"
+                    "Error ${response.code()}: ${response.message()}. $errorBodyString"
+                } catch (e: Exception) {
+                    "Error ${response.code()}: ${response.message()}"
+                }
+                return Result.failure(Exception(errorMessage))
+            }
+            
+            val responseBody = response.body()
+            if (responseBody == null) {
+                return Result.failure(Exception("Error: El servidor no devolvió datos"))
+            }
+            
+            val updatedProduct = responseBody.toProduct()
+            _products.update { list ->
+                list.map { if (it.id == updatedProduct.id) updatedProduct else it }
+            }
+            Result.success(updatedProduct)
+        } catch (e: java.net.SocketTimeoutException) {
+            Result.failure(Exception("Timeout: El servidor no respondió a tiempo."))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("Error de conexión: No se pudo conectar al servidor."))
+        } catch (e: java.net.ConnectException) {
+            Result.failure(Exception("Error de conexión: No se pudo establecer conexión con el servidor."))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error al actualizar producto: ${e.message ?: e.javaClass.simpleName}"))
         }
     }
     

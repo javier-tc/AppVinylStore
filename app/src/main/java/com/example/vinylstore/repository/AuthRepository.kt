@@ -4,6 +4,7 @@ import com.example.vinylstore.data.model.User
 import com.example.vinylstore.data.remote.SessionManager
 import com.example.vinylstore.data.remote.api.AuthApi
 import com.example.vinylstore.data.remote.dto.*
+import com.google.gson.Gson
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,8 +44,18 @@ class AuthRepository(
                 loadUserProfile(authResponse.userId)
                 Result.success(authResponse)
             } else {
-                val errorBody = response.errorBody()?.string() ?: "Sin detalles"
-                val errorMessage = "Error al iniciar sesión: ${response.code()} - ${response.message()}. Detalles: $errorBody"
+                val errorMessage = try {
+                    val errorBodyString = response.errorBody()?.string()
+                    if (!errorBodyString.isNullOrBlank()) {
+                        val gson = Gson()
+                        val errorResponse = gson.fromJson(errorBodyString, ErrorResponse::class.java)
+                        "Error al iniciar sesión: ${errorResponse.message}"
+                    } else {
+                        "Error al iniciar sesión"
+                    }
+                } catch (e: Exception) {
+                    "Error al iniciar sesión"
+                }
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: java.net.SocketTimeoutException) {
@@ -68,7 +79,19 @@ class AuthRepository(
                 loadUserProfile(authResponse.userId)
                 Result.success(authResponse)
             } else {
-                Result.failure(Exception("Error al registrar usuario: ${response.message()}"))
+                val errorMessage = try {
+                    val errorBodyString = response.errorBody()?.string()
+                    if (!errorBodyString.isNullOrBlank()) {
+                        val gson = Gson()
+                        val errorResponse = gson.fromJson(errorBodyString, ErrorResponse::class.java)
+                        "Error al registrar usuario: ${errorResponse.message}"
+                    } else {
+                        "Error al registrar usuario"
+                    }
+                } catch (e: Exception) {
+                    "Error al registrar usuario"
+                }
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -43,3 +43,7 @@ data class UserProfileDto(
     val role: String
 )
 
+data class ErrorResponse(
+    val message: String
+)
+

@@ -50,18 +50,14 @@ class OrderViewModel(
             } else {
                 orders
             }
-            if (filteredOrders.isEmpty()) {
-                flowOf(emptyList())
-            } else {
-                flow {
-                    val result = mutableListOf<OrderWithProduct>()
-                    filteredOrders.forEach { order ->
-                        val productResult = productRepository.getProductById(order.productId)
-                        val product = productResult.getOrNull()
-                        result.add(OrderWithProduct(order, product))
-                    }
-                    emit(result)
+            flow {
+                val result = mutableListOf<OrderWithProduct>()
+                filteredOrders.forEach { order ->
+                    val productResult = productRepository.getProductById(order.productId)
+                    val product = productResult.getOrNull()
+                    result.add(OrderWithProduct(order, product))
                 }
+                emit(result)
             }
         }
     }
@@ -72,9 +68,16 @@ class OrderViewModel(
         }
     }
     
-    fun refreshAllOrders() {
-        viewModelScope.launch {
-            orderRepository.getAllOrders()
+    suspend fun refreshAllOrders(): Result<Unit> {
+        return try {
+            val result = orderRepository.getAllOrders()
+            if (result.isSuccess) {
+                Result.success(Unit)
+            } else {
+                Result.failure(result.exceptionOrNull() ?: Exception("Error desconocido"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
     

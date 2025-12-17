@@ -15,7 +15,7 @@ object RetrofitClient {
     //URL base del backend
     //10.0.2.2 es la dirección del emulador Android para acceder a localhost
     //Para dispositivos físicos, usar la IP de tu máquina en la red local (ej: "http://192.168.1.100:8080/")
-    private const val BASE_URL = "http://jabirpc.ddns.net:8080/"
+    private const val BASE_URL = "http://174.129.72.131:8080/"
     
     // URL base para la API externa de Last.fm (usando HTTPS)
     private const val LAST_FM_BASE_URL = "https://ws.audioscrobbler.com/"

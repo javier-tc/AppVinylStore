@@ -39,6 +39,7 @@ class OrderRepository(
             val response = orderApi.getAllOrders()
             if (response.isSuccessful && response.body() != null) {
                 val orders = response.body()!!.map { it.toOrder() }
+                _orders.value = orders
                 Result.success(orders)
             } else {
                 Result.failure(Exception("Error al obtener pedidos: ${response.message()}"))

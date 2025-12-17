@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">jabirpc.ddns.net</domain>
+        <domain includeSubdomains="true">ws.audioscrobbler.com</domain>
     </domain-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">ws.audioscrobbler.com</domain>
+        <domain includeSubdomains="true">174.129.72.131</domain>
     </domain-config>
 </network-security-config>
 

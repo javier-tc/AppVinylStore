@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.vinylstore.data.local.database.AppDatabase
 import com.example.vinylstore.data.model.Product
 import com.example.vinylstore.data.model.User
 import com.example.vinylstore.data.remote.RetrofitClient
@@ -21,6 +22,7 @@ import com.example.vinylstore.repository.CartRepository
 import com.example.vinylstore.repository.MusicRepository
 import com.example.vinylstore.repository.OrderRepository
 import com.example.vinylstore.repository.ProductRepository
+import com.example.vinylstore.repository.ProfileImageRepository
 import com.example.vinylstore.ui.screens.*
 import com.example.vinylstore.ui.theme.VinylStoreTheme
 import com.example.vinylstore.viewmodel.*
@@ -53,12 +55,17 @@ class MainActivity : ComponentActivity() {
             lastFmApiKey
         )
         
+        //base de datos Room
+        val database = AppDatabase.getDatabase(this)
+        val profileImageRepository = ProfileImageRepository(database.profileImageDao())
+        
         val viewModelFactory = ViewModelFactory(
             authRepository,
             productRepository,
             cartRepository,
             orderRepository,
-            musicRepository
+            musicRepository,
+            profileImageRepository
         )
         
         setContent {
@@ -210,7 +217,9 @@ fun VinylStoreApp(viewModelFactory: ViewModelFactory) {
             ProfileScreen(
                 userName = currentUser?.nombre ?: "",
                 userEmail = currentUser?.email ?: "",
+                userId = currentUser?.id ?: 0,
                 isAdmin = currentUser?.rol == "administrador",
+                authViewModel = authViewModel,
                 musicViewModel = musicViewModel,
                 onLogout = {
                     authViewModel.logout()

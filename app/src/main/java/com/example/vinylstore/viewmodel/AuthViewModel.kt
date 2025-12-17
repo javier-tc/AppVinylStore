@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.vinylstore.data.model.User
 import com.example.vinylstore.repository.AuthRepository
+import com.example.vinylstore.repository.ProfileImageRepository
 import com.example.vinylstore.util.Validation
 import com.example.vinylstore.util.ValidationResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val profileImageRepository: ProfileImageRepository
 ) : ViewModel() {
     
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Initial)
@@ -41,6 +43,16 @@ class AuthViewModel(
     val registerFormState: StateFlow<RegisterFormState> = _registerFormState
     
     val currentUser: StateFlow<User?> = authRepository.currentUser
+    
+    fun getProfileImageUri(userId: Long) = profileImageRepository.getProfileImageUri(userId)
+    
+    suspend fun saveProfileImage(userId: Long, imageUri: String) {
+        profileImageRepository.saveProfileImage(userId, imageUri)
+    }
+    
+    suspend fun getProfileImageUriSync(userId: Long): String? {
+        return profileImageRepository.getProfileImageUriSync(userId)
+    }
     
     fun onLoginCorreoChange(correo: String) {
         _loginFormState.value = _loginFormState.value.copy(

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,21 +37,57 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.example.vinylstore.data.remote.dto.MusicRecommendation
+import com.example.vinylstore.viewmodel.AuthViewModel
 import com.example.vinylstore.viewmodel.MusicViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import kotlinx.coroutines.launch
 import java.io.File
+import java.io.InputStream
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+
+fun getProfileImageFile(context: Context, userId: Long): File {
+    val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+    val profileDir = File(storageDir, "profiles")
+    if (!profileDir.exists()) {
+        profileDir.mkdirs()
+    }
+    return File(profileDir, "profile_$userId.jpg")
+}
+
+suspend fun saveImageToPersistentStorage(context: Context, userId: Long, sourceUri: Uri): String? {
+    return try {
+        val destinationFile = getProfileImageFile(context, userId)
+        val inputStream: InputStream? = context.contentResolver.openInputStream(sourceUri)
+        inputStream?.use { input ->
+            FileOutputStream(destinationFile).use { output ->
+                input.copyTo(output)
+                output.flush()
+            }
+        }
+        if (destinationFile.exists() && destinationFile.length() > 0) {
+            destinationFile.absolutePath
+        } else {
+            null
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ProfileScreen(
     userName: String,
     userEmail: String,
+    userId: Long,
     isAdmin: Boolean,
+    authViewModel: AuthViewModel,
     musicViewModel: MusicViewModel,
     onLogout: () -> Unit,
     onBack: () -> Unit,
@@ -63,6 +100,36 @@ fun ProfileScreen(
     var isProcessingImage by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    //cargar imagen de perfil desde Room
+    val profileImageUri by authViewModel.getProfileImageUri(userId).collectAsState(initial = null)
+    
+    LaunchedEffect(userId, profileImageUri) {
+        if (userId > 0) {
+            profileImageUri?.let { filePath ->
+                try {
+                    val file = File(filePath)
+                    if (file.exists() && file.length() > 0) {
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file
+                        )
+                        selectedImageUri = uri
+                    } else {
+                        selectedImageUri = null
+                    }
+                } catch (e: Exception) {
+                    selectedImageUri = null
+                }
+            } ?: run {
+                selectedImageUri = null
+            }
+        } else {
+            selectedImageUri = null
+        }
+    }
     
     //estados del MusicViewModel
     val recommendations by musicViewModel.recommendations.collectAsState()
@@ -101,11 +168,26 @@ fun ProfileScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && imageFile != null) {
-            selectedImageUri = FileProvider.getUriForFile(
+            val sourceUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 imageFile!!
             )
+            coroutineScope.launch {
+                val savedPath = saveImageToPersistentStorage(context, userId, sourceUri)
+                savedPath?.let { filePath ->
+                    authViewModel.saveProfileImage(userId, filePath)
+                    val profileFile = File(filePath)
+                    if (profileFile.exists()) {
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            profileFile
+                        )
+                        selectedImageUri = uri
+                    }
+                }
+            }
             isProcessingImage = false
         } else {
             isProcessingImage = false
@@ -115,28 +197,38 @@ fun ProfileScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let {
-            selectedImageUri = it
-        }
-    }
-    
-    fun createImageFile(context: Context): File {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val imageFileName = "JPEG_${timeStamp}_"
-        val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
-        return File.createTempFile(imageFileName, ".jpg", storageDir).apply {
-            imageFile = this
+        uri?.let { sourceUri ->
+            selectedImageUri = sourceUri
+            coroutineScope.launch {
+                val savedPath = saveImageToPersistentStorage(context, userId, sourceUri)
+                savedPath?.let { filePath ->
+                    authViewModel.saveProfileImage(userId, filePath)
+                    val profileFile = File(filePath)
+                    if (profileFile.exists()) {
+                        val finalUri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            profileFile
+                        )
+                        selectedImageUri = finalUri
+                    }
+                }
+            }
         }
     }
     
     fun launchCamera() {
         if (permissionsState.allPermissionsGranted) {
             isProcessingImage = true
-            val file = createImageFile(context)
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val imageFileName = "JPEG_${timeStamp}_"
+            val storageDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
+            val tempFile = File.createTempFile(imageFileName, ".jpg", storageDir)
+            imageFile = tempFile
             val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
-                file
+                tempFile
             )
             cameraLauncher.launch(uri)
         } else {
